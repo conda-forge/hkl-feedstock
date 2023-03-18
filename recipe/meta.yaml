@@ -1,19 +1,20 @@
 {% set name = "hkl" %}
-{% set version = "5.0.0.2173" %}
-{% set sha256 = "5f3991d2af4ff01d6f6e29d0176af9bc1b54e6a8598046a050ad804fedd860f2" %}
+{% set version = "5.0.0.3001" %}
+{% set commit_hash = "0be5985a8aa893ab9aaffbfb8dc08fce0e4a2d79" %}
+{% set sha256 = "074b42c5f3d3bc084ea34cabaca13778a7f0347c1d90d780339a9df3bef8b8cf" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://github.com/picca/{{ name }}/archive/v{{ version }}.tar.gz
+  url: https://repo.or.cz/{{ name }}.git/snapshot/{{ commit_hash }}.tar.gz
   sha256: {{ sha256 }}
-  patches:
-    - no-docs.patch
+  # patches:
+  #   - no-docs.patch
 
 build:
-  number: 7
+  number: 0
   skip: True  # [py<36 or win or osx]
 
 requirements:
