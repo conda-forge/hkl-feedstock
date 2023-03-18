@@ -10,8 +10,8 @@ package:
 source:
   url: https://repo.or.cz/{{ name }}.git/snapshot/{{ commit_hash }}.tar.gz
   sha256: {{ sha256 }}
-  # patches:
-  #   - no-docs.patch
+  patches:
+    - no-docs.patch
 
 build:
   number: 0
