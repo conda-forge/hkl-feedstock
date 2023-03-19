@@ -1,27 +1,26 @@
 diff --git a/configure.ac b/configure.ac
-index 64af153..f376474 100644
+index 307a9564..f4817744 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -142,9 +142,6 @@ AM_COND_IF([HKL_DOC],
- 	    AC_PATH_PROG([EMACS], [emacs], [no])
- 	   ])
+@@ -164,8 +164,6 @@ AC_ARG_WITH([mathjax],
+ MATHJAX_PATH=$use_mathjax
+ AC_SUBST(MATHJAX_PATH)
  
 -dnl *** gtk-doc ***
 -GTK_DOC_CHECK([1.9],[--flavour no-tmpl])
--
+ 
  dnl *******************************
  dnl *** add an option for hkl3d ***
- dnl *******************************
-@@ -213,12 +210,6 @@ AC_CONFIG_FILES([Makefile
- 		 tests/Makefile
- 		 tests/bindings/Makefile
- 		 tests/tap/Makefile
--		 Documentation/Makefile
--		 Documentation/hkl.org
--		 Documentation/api/Makefile
--		 Documentation/figures/Makefile
--		 Documentation/sphinx/Makefile
--		 Documentation/sphinx/source/conf.py
- 		 gui/Makefile
- 		 data/Makefile
- 		 contrib/Makefile
+@@ -236,12 +234,6 @@ AC_CONFIG_FILES([Makefile
+                 tests/bindings/Makefile
+                 tests/tap/Makefile
+                  third-party/Makefile
+-                Documentation/Makefile
+-                Documentation/hkl.org
+-                Documentation/api/Makefile
+-                Documentation/figures/Makefile
+-                Documentation/sphinx/Makefile
+-                Documentation/sphinx/source/conf.py
+                 gui/Makefile
+                 data/Makefile
+                 contrib/Makefile
