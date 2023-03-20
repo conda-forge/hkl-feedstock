@@ -23,6 +23,7 @@ requirements:
     - {{ compiler('cxx') }}
     - autoconf
     - automake
+    - hdf5
     - libtool
     - m4
     - make
