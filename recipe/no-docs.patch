@@ -12,15 +12,15 @@ index 307a9564..f4817744 100644
  dnl *******************************
  dnl *** add an option for hkl3d ***
 @@ -236,12 +234,6 @@ AC_CONFIG_FILES([Makefile
-                 tests/bindings/Makefile
-                 tests/tap/Makefile
+ 		 tests/bindings/Makefile
+ 		 tests/tap/Makefile
                   third-party/Makefile
--                Documentation/Makefile
--                Documentation/hkl.org
--                Documentation/api/Makefile
--                Documentation/figures/Makefile
--                Documentation/sphinx/Makefile
--                Documentation/sphinx/source/conf.py
-                 gui/Makefile
-                 data/Makefile
-                 contrib/Makefile
+-		 Documentation/Makefile
+-		 Documentation/hkl.org
+-		 Documentation/api/Makefile
+-		 Documentation/figures/Makefile
+-		 Documentation/sphinx/Makefile
+-		 Documentation/sphinx/source/conf.py
+ 		 gui/Makefile
+ 		 data/Makefile
+ 		 contrib/Makefile
