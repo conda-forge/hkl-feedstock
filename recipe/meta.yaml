@@ -22,7 +22,6 @@ requirements:
     - {{ compiler('cxx') }}
     - autoconf
     - automake
-    - libhdf5-dev  # [unix]
     - libtool
     - m4
     - make
