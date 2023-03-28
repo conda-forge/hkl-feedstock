@@ -2,6 +2,9 @@
 
 set -e
 
+echo "CONDA_PREFIX=${CONDA_PREFIX}"
+echo "g-ir-scanner location: $(which g-ir-scanner)"
+
 test -d m4 || mkdir m4
 # gtkdocize || exit 1
 
