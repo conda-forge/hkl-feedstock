@@ -22,8 +22,11 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - autoconf
+    - autoconf-archive
     - automake
-    - libhdf5-dev  # [unix]
+    - gobject-introspection
+    - gsl
+    - hdf5
     - libtool
     - m4
     - make
