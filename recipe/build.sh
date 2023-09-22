@@ -14,6 +14,11 @@ aclocal --print-ac-dir
 export HDF5_CFLAGS=" -I${CONDA_PREFIX}/include"
 export HDF5_LIBS=" -L${CONDA_PREFIX}/lib -lhdf5"
 
+# diagnostics
+conda list obj
+echo "g-ir-scanner location: $(which g-ir-scanner)"
+echo "g-ir-scanner version: $(g-ir-scanner --version)"
+
 autoreconf -ivf
 
 ./configure \
@@ -21,5 +26,6 @@ autoreconf -ivf
     --disable-gui \
     --enable-introspection=yes \
     --prefix=$PREFIX
+
 make -j ${CPU_COUNT}
 make install
