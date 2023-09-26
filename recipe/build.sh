@@ -11,4 +11,4 @@ set -e
 
 # echo "pwd: $(pwd)"
 
-tar xzf "libhkl-${PKG_VERSION}-x86_64.tar.gz" -C "${PREFIX}
+tar xzf "libhkl-${PKG_VERSION}-x86_64.tar.gz" -C "${PREFIX}"
