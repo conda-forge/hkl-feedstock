@@ -8,10 +8,8 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz
+  url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz  # [unix and py<=38]
   sha256: {{ sha256 }}
-  patches:
-    - no-docs.patch
 
 build:
   number: 0
@@ -19,22 +17,18 @@ build:
   # detect_binary_files_with_prefix: false
 
 requirements:
-  build:
-    - gobject-introspection =1.64
-    - gsl =2.5
-    - pygobject
-    - python <3.9
+  # build:
+  #   - gobject-introspection =1.64
+  #   - gsl =2.5
+  #   - pygobject
+  #   - python <3.9
   host:
-    - glib
     - gobject-introspection =1.64
     - gsl =2.5
-    - libcblas
-    - libiconv
-    - pcre
     - pygobject
-    - python <3.9
+    - python
   run:
-    - python <3.9
+    - python
     - gsl =2.5
     - numpy
     - pygobject
