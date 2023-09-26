@@ -1,6 +1,7 @@
 {% set name = "hkl" %}
 {% set gitorg = "prjemian" %}
 {% set version = "v5.0.0.3001" %}
+{% set license = "COPYING" %}
 
 package:
   name: {{ name|lower }}
