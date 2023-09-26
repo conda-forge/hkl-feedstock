@@ -20,13 +20,13 @@ build:
 
 requirements:
   build:
-    - gobject-introspection=1.64.0
-    - gsl=2.5
+    - gobject-introspection =1.64.0
+    - gsl =2.5
     - pygobject
   host:
     - glib
-    - gobject-introspection=1.64.0
-    - gsl=2.5
+    - gobject-introspection =1.64.0
+    - gsl =2.5
     - libcblas
     - libiconv
     - pcre
@@ -34,7 +34,7 @@ requirements:
     - python
   run:
     - python
-    - gsl=2.5
+    - gsl =2.5
     - numpy
     - pygobject
 
