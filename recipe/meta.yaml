@@ -20,11 +20,6 @@ build:
   # detect_binary_files_with_prefix: false
 
 requirements:
-  # build:
-  #   - gobject-introspection =1.64
-  #   - gsl =2.5
-  #   - pygobject
-  #   - python <3.9
   host:
     - gobject-introspection =1.64
     - gsl =2.5
@@ -32,7 +27,9 @@ requirements:
     - python
   run:
     - python
+    - gobject-introspection =1.64
     - gsl =2.5
+    - libglib
     - numpy
     - pygobject
 
@@ -40,6 +37,7 @@ test:
   commands:
     - test -f ${PREFIX}/lib/libhkl.so
     - test ! -f ${PREFIX}/lib/libhkl.a
+    - python ./try_libhkl.py
 
 about:
   home: http://repo.or.cz/w/hkl.git
