@@ -19,24 +19,28 @@ requirements:
   host:
     - gobject-introspection =1.66.1
     - gsl =2.6
+    - libglib
+    - libgobject
     - pygobject
     - python
   run:
     - python
     - gobject-introspection =1.66.1
     - gsl =2.6
-    - libglib
     - numpy
     - pygobject
+    # - conda-verify  ?
 
 test:
   commands:
     - test -f ${PREFIX}/lib/libhkl.so
     - test ! -f ${PREFIX}/lib/libhkl.a
     - pwd
-    - ls -lAFgh
+    - ls -lAFgh ${SRC_DIR}
     - test -f ${SRC_DIR}/try_libhkl.py
+    - echo "libhkl test starting"
     - python ${SRC_DIR}/try_libhkl.py
+    - echo "libhkl test finished"
 
 about:
   home: http://repo.or.cz/w/hkl.git
