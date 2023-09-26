@@ -15,3 +15,5 @@ echo "Installing from ${TARBALL}"
 tar xzf "${TARBALL}" -C "${PREFIX}"
 echo "DIAGNOSTIC installed directory:"
 # ls -lAFghR  "${PREFIX}"
+
+ls -lAFgh ${PREFIX}/lib/libhkl.*
