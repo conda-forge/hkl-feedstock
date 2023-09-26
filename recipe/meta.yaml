@@ -8,12 +8,12 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz  # [unix and py<=38]
+  url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz
   sha256: {{ sha256 }}
 
 build:
   number: 0
-  skip: True  # [py<36 or win or osx]
+  skip: True  # [py<36 or py>38 or win or osx]
   # detect_binary_files_with_prefix: false
 
 requirements:
