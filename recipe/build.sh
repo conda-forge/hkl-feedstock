@@ -2,30 +2,11 @@
 
 set -e
 
-echo "CONDA_PREFIX=${CONDA_PREFIX}"
-echo "g-ir-scanner location: $(which g-ir-scanner)"
+# echo "CONDA_PREFIX=${CONDA_PREFIX}"
+echo "environment:"
+env | sort
 
-test -d m4 || mkdir m4
-# gtkdocize || exit 1
+echo "directory listing:"
+ls -lAFgh
 
-export ACLOCAL_PATH="$PREFIX/share/aclocal"
-aclocal --print-ac-dir
-
-export HDF5_CFLAGS=" -I${CONDA_PREFIX}/include"
-export HDF5_LIBS=" -L${CONDA_PREFIX}/lib -lhdf5"
-
-# diagnostics
-conda list obj
-echo "g-ir-scanner location: $(which g-ir-scanner)"
-echo "g-ir-scanner version: $(g-ir-scanner --version)"
-
-autoreconf -ivf
-
-./configure \
-    --disable-static \
-    --disable-gui \
-    --enable-introspection=yes \
-    --prefix=$PREFIX
-
-make -j ${CPU_COUNT}
-make install
+echo "pwd: $(pwd)"

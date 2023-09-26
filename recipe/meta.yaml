@@ -1,14 +1,14 @@
 {% set name = "hkl" %}
-{% set version = "5.0.0.3001" %}
-{% set commit_hash = "0be5985a8aa893ab9aaffbfb8dc08fce0e4a2d79" %}
-{% set sha256 = "074b42c5f3d3bc084ea34cabaca13778a7f0347c1d90d780339a9df3bef8b8cf" %}
+{% set gitorg = "prjemian" %}
+{% set version = "v5.0.0.3001" %}
+{% set sha256 = "07dd725ebb668f0dd4bd23f78dc422eb1f4aa1f7cb2274e2cc76d42ce2baf768" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://repo.or.cz/{{ name }}.git/snapshot/{{ commit_hash }}.tar.gz
+  url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz
   sha256: {{ sha256 }}
   patches:
     - no-docs.patch
@@ -16,25 +16,17 @@ source:
 build:
   number: 0
   skip: True  # [py<36 or win or osx]
+  # detect_binary_files_with_prefix: false
 
 requirements:
   build:
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - autoconf
-    - autoconf-archive
-    - automake
-    - gobject-introspection
-    - gsl
-    - hdf5
-    - libtool
-    - m4
-    - make
-    - pkg-config
+    - gobject-introspection=1.64.0
+    - gsl=2.5
+    - pygobject
   host:
     - glib
-    - gobject-introspection
-    - gsl
+    - gobject-introspection=1.64.0
+    - gsl=2.5
     - libcblas
     - libiconv
     - pcre
@@ -42,7 +34,7 @@ requirements:
     - python
   run:
     - python
-    - gsl
+    - gsl=2.5
     - numpy
     - pygobject
 
