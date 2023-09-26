@@ -8,8 +8,11 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz
-  sha256: {{ sha256 }}
+  # url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz
+  # sha256: {{ sha256 }}
+  # script: tar xzf libhkl-{{ version }}-x86_64.tar.gz -C ${PREFIX}
+  git_rev: main
+  git_url: https://github.com/{{ gitorg }}/libhkl.git
 
 build:
   number: 0
