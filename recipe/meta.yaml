@@ -23,6 +23,7 @@ requirements:
     - gobject-introspection =1.64
     - gsl =2.5
     - pygobject
+    - python <3.9
   host:
     - glib
     - gobject-introspection =1.64
@@ -31,9 +32,9 @@ requirements:
     - libiconv
     - pcre
     - pygobject
-    - python
+    - python <3.9
   run:
-    - python
+    - python <3.9
     - gsl =2.5
     - numpy
     - pygobject
