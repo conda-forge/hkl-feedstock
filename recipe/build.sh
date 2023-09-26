@@ -10,4 +10,8 @@ ls -lAFgh
 
 echo "DIAGNOSTIC pwd: $(pwd)"
 
-tar xzf "libhkl-${PKG_VERSION}-x86_64.tar.gz" -C "${PREFIX}"
+TARBALL="libhkl-${PKG_VERSION}-x86_64.tar.gz"
+echo "Installing from ${TARBALL}"
+tar xzf "${TARBALL}" -C "${PREFIX}"
+echo "DIAGNOSTIC installed directory:"
+ls -lAFghR  "${PREFIX}"

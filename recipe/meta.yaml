@@ -1,34 +1,29 @@
 {% set name = "hkl" %}
 {% set gitorg = "prjemian" %}
 {% set version = "v5.0.0.3001" %}
-{% set sha256 = "2734cdc61cfae016d2a8431b22d8038be17f6a40bfd03b39d866313e9f9f8c49" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  # url: https://github.com/{{ gitorg }}/libhkl/blob/main/libhkl-{{ version }}-x86_64.tar.gz
-  # sha256: {{ sha256 }}
-  # script: tar xzf libhkl-{{ version }}-x86_64.tar.gz -C ${PREFIX}
   git_rev: main
   git_url: https://github.com/{{ gitorg }}/libhkl.git
 
 build:
   number: 0
-  skip: True  # [py<36 or py>38 or win or osx]
-  # detect_binary_files_with_prefix: false
+  skip: True  # [py<36 or py>39 or win or osx]
 
 requirements:
   host:
-    - gobject-introspection =1.64
-    - gsl =2.5
+    - gobject-introspection =1.66.1
+    - gsl =2.6
     - pygobject
     - python
   run:
     - python
-    - gobject-introspection =1.64
-    - gsl =2.5
+    - gobject-introspection =1.66.1
+    - gsl =2.6
     - libglib
     - numpy
     - pygobject
@@ -37,7 +32,10 @@ test:
   commands:
     - test -f ${PREFIX}/lib/libhkl.so
     - test ! -f ${PREFIX}/lib/libhkl.a
-    - python ./try_libhkl.py
+    - pwd
+    - ls -lAFgh
+    - test -f ${SRC_DIR}/try_libhkl.py
+    - python ${SRC_DIR}/try_libhkl.py
 
 about:
   home: http://repo.or.cz/w/hkl.git
