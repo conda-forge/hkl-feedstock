@@ -1,7 +1,7 @@
 {% set name = "hkl" %}
 {% set gitorg = "prjemian" %}
 {% set version = "v5.0.0.3001" %}
-{% set sha256 = "07dd725ebb668f0dd4bd23f78dc422eb1f4aa1f7cb2274e2cc76d42ce2baf768" %}
+{% set sha256 = "2734cdc61cfae016d2a8431b22d8038be17f6a40bfd03b39d866313e9f9f8c49" %}
 
 package:
   name: {{ name|lower }}
