@@ -1,5 +1,5 @@
 {% set name = "hkl" %}
-{% set gitorg = "prjemian" %}
+{% set gitorg = "bluesky" %}
 {% set version = "v5.0.0.3001" %}
 {% set license = "COPYING" %}
 
@@ -36,8 +36,8 @@ test:
     - test ! -f ${PREFIX}/lib/libhkl.a
     - echo "libhkl test starting"
     - ls -lAFgh ${SRC_DIR}
-    - test -f ${SRC_DIR}/try_libhkl.py
-    - python ${SRC_DIR}/try_libhkl.py
+    - test -f ${SRC_DIR}/tests/try_libhkl.py
+    - python ${SRC_DIR}/tests/try_libhkl.py
     - echo "libhkl test finished"
 
 about:
