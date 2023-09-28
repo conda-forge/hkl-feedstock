@@ -13,18 +13,18 @@ source:
 
 build:
   number: 0
-  skip: True  # [py<36 or py>39 or win or osx]
+  skip: True  # [py<38 or py>11 or win or osx]
 
 requirements:
   host:
-    - gobject-introspection =1.66.1
-    - gsl =2.6
+    - gobject-introspection =1.78.1
+    - gsl =2.7
     - pygobject
     - python
   run:
     - python
-    - gobject-introspection =1.66.1
-    - gsl =2.6
+    - gobject-introspection =1.78.1
+    - gsl =2.7
     - numpy
     - pygobject
     # - conda-verify  ?
@@ -36,8 +36,8 @@ test:
     - test ! -f ${PREFIX}/lib/libhkl.a
     - echo "libhkl test starting"
     - ls -lAFgh ${SRC_DIR}
-    # - test -f ${SRC_DIR}/try_libhkl.py
-    # - python ${SRC_DIR}/try_libhkl.py
+    - test -f ${SRC_DIR}/try_libhkl.py
+    - python ${SRC_DIR}/try_libhkl.py
     - echo "libhkl test finished"
 
 about:
