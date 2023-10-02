@@ -1,6 +1,7 @@
 {% set name = "hkl" %}
-{% set gitorg = "bluesky" %}
 {% set version = "v5.0.0.3001" %}
+{% set tag = "v5.0.0.2173" %}
+{% set tarball = "libhkl-v5.0.0.2173-x86_64.tar.gz" %}
 {% set license = "COPYING" %}
 
 package:
@@ -8,8 +9,8 @@ package:
   version: {{ version }}
 
 source:
-  git_rev: main
-  git_url: https://github.com/{{ gitorg }}/libhkl.git
+  url: https://github.com/bluesky/libhkl/releases/download/{{ tag }}/{{ tarball }}
+  sha: 0d36ee67057239f6a439b3f4fecac20df5102627c81bae90f1bc1e3c94e56a90
 
 build:
   number: 0
