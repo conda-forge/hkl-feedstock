@@ -11,7 +11,7 @@ ls -lAFgh
 echo "DIAGNOSTIC pwd: $(pwd)"
 
 echo "DIAGNOSTIC directory listing (source cache):"
-ls -lAFgh/home/conda/feedstock_root/build_artifacts/src_cache
+ls -lAFgh /home/conda/feedstock_root/build_artifacts/src_cache
 
 TARBALL="libhkl-v${PKG_VERSION}-x86_64.tar.gz"
 echo "Installing from ${TARBALL}"
