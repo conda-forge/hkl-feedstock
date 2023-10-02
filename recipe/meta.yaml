@@ -1,9 +1,8 @@
 {% set name = "hkl" %}
 {% set version = "v5.0.0.3001" %}
-{% set repo_tag = "v1.0.0" %}
-{% set tarball = "libhkl-v5.0.0.2173-x86_64.tar.gz" %}
-# {% set tarball_sha256 = "0d36ee67057239f6a439b3f4fecac20df5102627c81bae90f1bc1e3c94e56a90" %}
-{% set tarball_sha256 = "force CI to re-run" %}
+{% set repo_tag = "v1.1.0" %}
+{% set tarball = "libhkl-v5.0.0.3001-x86_64.tar.gz" %}
+{% set tarball_sha256 = "b0a79417855ab358a7f1c5e08074b3e7e014b5d2e10c325d6e1328f3442bf69d" %}
 {% set license = "COPYING" %}
 
 package:
