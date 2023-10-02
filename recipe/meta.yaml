@@ -35,6 +35,7 @@ test:
   commands:
     - ls -lAFgh ${PREFIX}/lib/libhkl.*
     - test -f ${PREFIX}/lib/libhkl.so
+    - echo "references these dynamic libraries"
     - ldd ${PREFIX}/lib/libhkl.so
     - test ! -f ${PREFIX}/lib/libhkl.a
     - echo "libhkl test starting"
