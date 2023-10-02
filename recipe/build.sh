@@ -10,6 +10,12 @@ ls -lAFgh
 
 echo "DIAGNOSTIC pwd: $(pwd)"
 
+echo "DIAGNOSTIC directory listing (source directory):"
+ls -lAFgh "${SRC_DIR}"
+
+echo "DIAGNOSTIC directory listing (RECIPE_DIR):"
+ls -lAFgh "${RECIPE_DIR}"
+
 echo "DIAGNOSTIC directory listing (source cache):"
 SRC_CACHE=/home/conda/feedstock_root/build_artifacts/src_cache
 ls -lAFgh "${SRC_CACHE}"

@@ -40,8 +40,8 @@ test:
     - test ! -f ${PREFIX}/lib/libhkl.a
     - echo "libhkl test starting"
     - ls -lAFgh ${SRC_DIR}
-    - test -f ${SRC_DIR}/try_libhkl.py
-    - python ${SRC_DIR}/try_libhkl.py
+    - test -f ${RECIPE_DIR}/try_libhkl.py
+    - python ${RECIPE_DIR}/try_libhkl.py
     - echo "libhkl test finished"
 
 about:
