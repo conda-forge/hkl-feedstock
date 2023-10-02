@@ -1,8 +1,8 @@
 {% set name = "hkl" %}
 {% set version = "v5.0.0.3001" %}
-{% set tag = "v5.0.0.2173" %}
+{% set repo_tag = "v1.0.0" %}
 {% set tarball = "libhkl-v5.0.0.2173-x86_64.tar.gz" %}
-{% set tarball_sha256 = "5f3991d2af4ff01d6f6e29d0176af9bc1b54e6a8598046a050ad804fedd860f2" %}
+{% set tarball_sha256 = "0d36ee67057239f6a439b3f4fecac20df5102627c81bae90f1bc1e3c94e56a90" %}
 {% set license = "COPYING" %}
 
 package:
@@ -10,7 +10,7 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/bluesky/libhkl/releases/download/{{ tag }}/{{ tarball }}
+  url: https://github.com/bluesky/libhkl/releases/download/{{ repo_tag }}/{{ tarball }}
   sha256: {{ tarball_sha256 }}
 
 build:
