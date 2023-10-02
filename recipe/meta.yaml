@@ -15,7 +15,7 @@ source:
 
 build:
   number: 0
-  skip: True  # [py<38 or py>11 or win or osx]
+  skip: True  # [py<38 or py>12 or win or osx]
 
 requirements:
   host:
