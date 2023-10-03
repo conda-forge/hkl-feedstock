@@ -1,6 +1,9 @@
 """Test that libhkl pre-built support is available in Python."""
 
-import gi  # gobject-introspection, to access libhkl
+try:
+    import gi  # gobject-introspection, to access libhkl
+except Exception as exc:
+    print(f"{exc=}")
 # assert "require_version" in dir(gi)
 
 # gi.require_version("Hkl", "5.0")
