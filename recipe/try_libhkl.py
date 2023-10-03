@@ -1,7 +1,8 @@
 """Test that libhkl pre-built support is available in Python."""
 
 try:
-    import gi  # gobject-introspection, to access libhkl
+    # import gi  # gobject-introspection, to access libhkl
+    import sys
 except Exception as exc:
     print(f"{exc=}")
 # assert "require_version" in dir(gi)
