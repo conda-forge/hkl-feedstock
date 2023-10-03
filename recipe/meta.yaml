@@ -30,6 +30,9 @@ requirements:
     - numpy
     - pygobject
 
+  test:
+    script: run_test.sh
+
 # test:
 #   commands:
 #     - ls -lAFgh ${PREFIX}/lib/libhkl.*
