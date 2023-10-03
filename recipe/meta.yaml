@@ -30,8 +30,8 @@ requirements:
     - numpy
     - pygobject
 
-  test:
-    script: run_test.sh
+test:
+  script: run_test.sh
 
 # test:
 #   commands:
