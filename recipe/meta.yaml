@@ -31,20 +31,17 @@ requirements:
     - pygobject
 
 test:
-  script: run_test.sh
-
-# test:
-#   commands:
-#     - ls -lAFgh ${PREFIX}/lib/libhkl.*
-#     - test -f ${PREFIX}/lib/libhkl.so
-#     - echo "references these dynamic libraries"
-#     - ldd ${PREFIX}/lib/libhkl.so
-#     - test ! -f ${PREFIX}/lib/libhkl.a
-#     - echo "libhkl test starting"
-#     - ls -lAFgh ${SRC_DIR}
-#     - test -f ${RECIPE_DIR}/try_libhkl.py
-#     - python ${RECIPE_DIR}/try_libhkl.py
-#     - echo "libhkl test finished"
+  commands:
+    - ls -lAFgh ${PREFIX}/lib/libhkl.*
+    - test -f ${PREFIX}/lib/libhkl.so
+    - echo "references these dynamic libraries"
+    - ldd ${PREFIX}/lib/libhkl.so
+    - test ! -f ${PREFIX}/lib/libhkl.a
+    - echo "libhkl test starting"
+    - ls -lAFgh ${SRC_DIR}
+    - test -f ${RECIPE_DIR}/try_libhkl.py
+    - python ${RECIPE_DIR}/try_libhkl.py
+    - echo "libhkl test finished"
 
 about:
   home: http://repo.or.cz/w/hkl.git
