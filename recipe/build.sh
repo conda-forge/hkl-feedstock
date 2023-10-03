@@ -2,14 +2,29 @@
 
 set -e
 
-test -d m4 || mkdir m4
-# gtkdocize || exit 1
+echo "DIAGNOSTIC environment:"
+env | sort
 
-export ACLOCAL_PATH="$PREFIX/share/aclocal"
-aclocal --print-ac-dir
+echo "DIAGNOSTIC directory listing (pwd):"
+ls -lAFgh
 
-autoreconf -ivf
+echo "DIAGNOSTIC pwd: $(pwd)"
 
-./configure --disable-static --disable-gui --enable-introspection=yes --disable-hkl-doc --prefix=$PREFIX
-make -j ${CPU_COUNT}
-make install
+echo "DIAGNOSTIC directory listing (source directory):"
+ls -lAFgh "${SRC_DIR}"
+
+echo "DIAGNOSTIC directory listing (RECIPE_DIR):"
+ls -lAFgh "${RECIPE_DIR}"
+
+echo "DIAGNOSTIC directory listing (source cache):"
+SRC_CACHE=/home/conda/feedstock_root/build_artifacts/src_cache
+ls -lAFgh "${SRC_CACHE}"
+
+# TARBALL="libhkl-v${PKG_VERSION}-x86_64.tar.gz"
+TARBALL="${SRC_CACHE}/$(ls ${SRC_CACHE} | grep libhkl)"
+echo "Installing from ${TARBALL}"
+tar xzf "${TARBALL}" -C "${PREFIX}"
+echo "DIAGNOSTIC installed directory:"
+# ls -lAFghR  "${PREFIX}"
+
+ls -lAFgh ${PREFIX}/lib/libhkl.*

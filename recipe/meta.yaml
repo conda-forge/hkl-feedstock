@@ -1,50 +1,48 @@
 {% set name = "hkl" %}
-{% set version = "5.0.0.2173" %}
-{% set sha256 = "5f3991d2af4ff01d6f6e29d0176af9bc1b54e6a8598046a050ad804fedd860f2" %}
+{% set version = "5.0.0.3001" %}
+{% set repo_tag = "v1.1.0" %}
+{% set tarball = "libhkl-v5.0.0.3001-x86_64.tar.gz" %}
+{% set tarball_sha256 = "b0a79417855ab358a7f1c5e08074b3e7e014b5d2e10c325d6e1328f3442bf69d" %}
+{% set license = "COPYING" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://github.com/picca/{{ name }}/archive/v{{ version }}.tar.gz
-  sha256: {{ sha256 }}
-  patches:
-    - no-docs.patch
+  url: https://github.com/bluesky/libhkl/releases/download/{{ repo_tag }}/{{ tarball }}
+  sha256: {{ tarball_sha256 }}
 
 build:
-  number: 7
-  skip: True  # [py<36 or win or osx]
+  number: 0
+  skip: true  # [python_impl == 'pypy']
+  skip: true  # [py<38 or py>312 or win or osx]
 
 requirements:
-  build:
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - autoconf
-    - automake
-    - libtool
-    - m4
-    - make
-    - pkg-config
   host:
-    - glib
-    - gobject-introspection
-    - gsl
-    - libcblas
-    - libiconv
-    - pcre
+    - gobject-introspection =1.78.1
+    - gsl =2.7
     - pygobject
     - python
   run:
     - python
-    - gsl
+    - gobject-introspection =1.78.1
+    - gsl =2.7
     - numpy
     - pygobject
 
 test:
   commands:
+    - ls -lAFgh ${PREFIX}/lib/libhkl.*
     - test -f ${PREFIX}/lib/libhkl.so
+    - echo "references these dynamic libraries"
+    - ldd ${PREFIX}/lib/libhkl.so
     - test ! -f ${PREFIX}/lib/libhkl.a
+    - echo "libhkl test starting"
+    - ls -lAFgh ${SRC_DIR}
+    - test -f ${RECIPE_DIR}/try_libhkl.py
+    - python ${RECIPE_DIR}/try_libhkl.py
+    - echo "libhkl test finished"
 
 about:
   home: http://repo.or.cz/w/hkl.git
