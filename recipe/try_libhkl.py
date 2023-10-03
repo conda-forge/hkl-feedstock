@@ -1,8 +1,8 @@
 """Test that libhkl pre-built support is available in Python."""
 
-# import gi  # gobject-introspection, to access libhkl
-# gi.require_version("Hkl", "5.0")
-# from gi.repository import Hkl as libhkl
+import gi  # gobject-introspection, to access libhkl
+gi.require_version("Hkl", "5.0")
+from gi.repository import Hkl as libhkl
 
 # # access some content
 # diffractometer_types = libhkl.factories()
