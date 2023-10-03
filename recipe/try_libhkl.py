@@ -1,10 +1,10 @@
 """Test that libhkl pre-built support is available in Python."""
 
 import gi  # gobject-introspection, to access libhkl
-assert "require_version" in dir(gi)
+assert "require_version" in dir(gi), f"{dir(gi)=}"
 
 gi.require_version("Hkl", "5.0")
-assert "Hkl" in dir(gi.repository)
+assert "Hkl" in dir(gi.repository), f"{dir(gi.repository)=}"
 
 from gi.repository import Hkl as libhkl
 assert libhkl is not None
