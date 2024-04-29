@@ -14,7 +14,7 @@ source:
   sha256: {{ tarball_sha256 }}
 
 build:
-  number: 1
+  number: 2
   skip: true  # [python_impl == 'pypy']
   skip: true  # [py<38 or win or osx]
 
@@ -23,9 +23,9 @@ requirements:
     - gobject-introspection =1.78.1
     - gsl =2.7
     - pygobject
-    - python
+    - python >=3.8
   run:
-    - python
+    - python >=3.8
     - gobject-introspection =1.78.1
     - gsl =2.7
     - numpy
