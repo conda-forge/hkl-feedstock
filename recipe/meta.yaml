@@ -23,9 +23,9 @@ requirements:
     - gobject-introspection =1.78.1
     - gsl =2.7
     - pygobject
-    - python >=3.8
+    - python
   run:
-    - python >=3.8
+    - python
     - gobject-introspection =1.78.1
     - gsl =2.7
     - numpy
