@@ -14,9 +14,8 @@ source:
   sha256: {{ tarball_sha256 }}
 
 build:
-  number: 1
-  skip: true  # [python_impl == 'pypy']
-  skip: true  # [py<38 or win or osx]
+  number: 8
+  skip: True  # [py<36 or win or osx]
 
 requirements:
   host:
