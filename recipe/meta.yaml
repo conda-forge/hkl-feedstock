@@ -1,7 +1,7 @@
 {% set name = "hkl" %}
-{% set version = "5.0.0.3357" %}
-{% set repo_tag = "v1.2.0" %}
-{% set tarball = "libhkl-v5.0.0.3357-x86_64.tar.gz" %}
+{% set version = "5.0.0.3434" %}
+{% set repo_tag = "v1.2.1" %}
+{% set tarball = "libhkl-v5.0.0.3434-x86_64.tar.gz" %}
 {% set tarball_sha256 = "cc439eb4787b577e31a7aa7764df5143cfcded9a9fa22ac7fef7974049f1d727" %}
 {% set license = "COPYING" %}
 
@@ -14,7 +14,7 @@ source:
   sha256: {{ tarball_sha256 }}
 
 build:
-  number: 8
+  number: 0
   skip: True  # [py<36 or win or osx]
 
 requirements:
