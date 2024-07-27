@@ -2,7 +2,7 @@
 {% set version = "5.0.0.3501" %}
 {% set repo_tag = "v1.2.2" %}
 {% set tarball = "libhkl-v5.0.0.3501-x86_64.tar.gz" %}
-{% set tarball_sha256 = "" %}
+{% set tarball_sha256 = "8eb63eaf91d7551405876c6938ec94282f9945b763b327f393176692bc6df5da" %}
 {% set license = "COPYING" %}
 
 package:
