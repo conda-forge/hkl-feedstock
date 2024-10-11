@@ -14,7 +14,7 @@ source:
   sha256: {{ tarball_sha256 }}
 
 build:
-  number: 0
+  number: 1
   skip: True  # [py<36 or win or osx]
 
 requirements:
