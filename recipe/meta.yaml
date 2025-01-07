@@ -33,7 +33,6 @@ requirements:
     - libcblas
     - libtool
     - m4
-    - python <3.12
     - zlib
   run:
     - gobject-introspection
@@ -43,6 +42,7 @@ test:
   requires:
     - conda-verify
     - pip
+    - python <3.12
 
 about:
   home: http://repo.or.cz/w/hkl.git
