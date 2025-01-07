@@ -1,30 +1,40 @@
 #!/bin/bash
 
-set -e
+set -ex
 
-echo "DIAGNOSTIC environment:"
-env | sort
+printf "### \n"
+printf "### (%s) start of build.sh \n" $(date -Iseconds)
+printf "###  \n"
 
-echo "DIAGNOSTIC directory listing (pwd):"
-ls -lAFgh
+export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}":"${BUILD_PREFIX}/lib/pkgconfig"
 
-echo "DIAGNOSTIC pwd: $(pwd)"
+printf "### ---> (%s) Disable/remove gtk-doc from source ... \n" $(date -Iseconds)
+touch gtk-doc.make  # OK if it is empty
+sed -e 's/^gtkdocize/#&/' -i autogen.sh
+sed '/^GTK_DOC.*/a m4_ifdef([GTK_DOC_USE_LIBTOOL], [], [AM_CONDITIONAL([GTK_DOC_USE_LIBTOOL], false)])' -i configure.ac
+sed -e 's/^GTK_DOC/dnl &/' -i configure.ac
+sed -r 's/--enable-gtk-doc//'  -i Makefile.am
+grep gtkdocize autogen.sh
+grep GTK_DOC configure.ac
+grep AM_DISTCHECK_CONFIGURE_FLAGS Makefile.am
 
-echo "DIAGNOSTIC directory listing (source directory):"
-ls -lAFgh "${SRC_DIR}"
+printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
+bash ./autogen.sh
 
-echo "DIAGNOSTIC directory listing (RECIPE_DIR):"
-ls -lAFgh "${RECIPE_DIR}"
+printf "### ---> (%s) Running configure ... \n" $(date -Iseconds)
+./configure \
+  --prefix="${PREFIX}" \
+  --disable-static \
+  --disable-binoculars \
+  --disable-gui \
+  --disable-hkl-doc \
+  --enable-introspection=yes
+# printf "### ---> DIR : %s\n" $(ls)
 
-echo "DIAGNOSTIC directory listing (source cache):"
-SRC_CACHE=/home/conda/feedstock_root/build_artifacts/src_cache
-ls -lAFgh "${SRC_CACHE}"
+printf "### ---> (%s) Running make ... \n" $(date -Iseconds)
+make -j "${CPU_COUNT:-1}"
 
-# TARBALL="libhkl-v${PKG_VERSION}-x86_64.tar.gz"
-TARBALL="${SRC_CACHE}/$(ls ${SRC_CACHE} | grep libhkl)"
-echo "Installing from ${TARBALL}"
-tar xzf "${TARBALL}" -C "${PREFIX}"
-echo "DIAGNOSTIC installed directory:"
-# ls -lAFghR  "${PREFIX}"
+printf "### ---> (%s) Running make install ... \n" $(date -Iseconds)
+make install
 
-ls -lAFgh ${PREFIX}/lib/libhkl.*
+printf "### (%s) end of build.sh \n" $(date -Iseconds)
