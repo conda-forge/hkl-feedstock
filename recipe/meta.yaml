@@ -1,55 +1,58 @@
 {% set name = "hkl" %}
-{% set version = "5.0.0.3512" %}
-{% set repo_tag = "v1.2.3" %}
-{% set tarball = "libhkl-v5.0.0.3512-x86_64.tar.gz" %}
-{% set tarball_sha256 = "d8a541dadca87424bfe0ed46122a6efb88684988f9cf32b5f7a7ed2ccb9c93b8" %}
-{% set license = "COPYING" %}
+{% set version = "5.1.2.3679" %}
+{% set git_hash = "f766ae40b7c1cdccf47c9ef5deae6a1534dc7f2a" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://github.com/bluesky/libhkl/releases/download/{{ repo_tag }}/{{ tarball }}
-  sha256: {{ tarball_sha256 }}
+  sha256: "bcc510259f279745e42a04aced1074dd7892b68bc83214b86a77323f1d2d0d49"
+  url: https://repo.or.cz/hkl.git/snapshot/{{ git_hash }}.tar.gz
 
 build:
-  number: 1
-  skip: True  # [py<36 or win or osx]
+  number: 0
+  skip: True  # [py<39 or win or osx]
 
 requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ stdlib('c') }}
+    - autoconf
+    - make
+    - pkg-config
   host:
-    - gobject-introspection 
-    - gsl =2.6
+    - autoconf-archive
+    - automake
+    - conda-verify
+    - glib
+    - glib-tools
+    - gobject-introspection
+    - gsl
+    - libglib
     - libcblas
-    - pygobject
-    - python
+    - libtool
+    - m4
+    - zlib
   run:
-    - python
-    - gobject-introspection 
-    - gsl =2.6
-    - libcblas
-    - numpy
+    - gobject-introspection
     - pygobject
 
 test:
-  commands:
-    - ls -lAFgh ${PREFIX}/lib/libhkl.*
-    - test -f ${PREFIX}/lib/libhkl.so
-    - echo "references these dynamic libraries"
-    - ldd ${PREFIX}/lib/libhkl.so
-    - test ! -f ${PREFIX}/lib/libhkl.a
-    - echo "libhkl test starting"
-    - ls -lAFgh ${SRC_DIR}
-    - test -f ${RECIPE_DIR}/try_libhkl.py
-    - python ${RECIPE_DIR}/try_libhkl.py
-    - echo "libhkl test finished"
+  requires:
+    - conda-verify
+    - pip
+    - python <3.12
+  downstreams:
+    - hklpy
+    - hklpy2
 
 about:
   home: http://repo.or.cz/w/hkl.git
+  summary: Synchrotron SOLEIL library for diffractometer operations.
   license: GPL-3.0-or-later
+  license_family: GPL
   license_file: COPYING
-  summary: Diffractometer computation library
   doc_url: https://people.debian.org/~picca/hkl/hkl.html
   dev_url: http://repo.or.cz/w/hkl.git
 

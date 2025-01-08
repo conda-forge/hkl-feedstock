@@ -1,4 +1,4 @@
-"""Test that libhkl pre-built support is available in Python."""
+"""Test that library (libhkl) is available in Python."""
 
 import gi  # gobject-introspection, to access libhkl
 
@@ -24,6 +24,14 @@ assert DefaultUnits is not None
 TEST_GEOMETRY = "E4CV"
 TEST_AXIS_LIST = "omega chi phi tth".split()
 TEST_ENGINE = "hkl"
+TEST_MODES = """
+    bissector
+    constant_omega
+    constant_chi
+    constant_phi
+    double_diffraction
+    psi_constant
+""".strip().split()
 
 factory = diffractometer_types[TEST_GEOMETRY]
 engine_list = factory.create_new_engine_list()
@@ -31,15 +39,9 @@ engine_names = [e.name_get() for e in engine_list.engines_get()]
 assert TEST_ENGINE in engine_names
 
 engine = engine_list.engine_get_by_name(TEST_ENGINE)
-modes = engine.modes_names_get() 
-assert "bissector" in modes, f"{modes=}"
-assert "constant_omega" in modes, f"{modes=}"
-assert "constant_chi" in modes, f"{modes=}"
-assert "constant_phi" in modes, f"{modes=}"
-assert "double_diffraction" in modes, f"{modes=}"
-assert "psi_constant" in modes, f"{modes=}"
+assert engine.modes_names_get() == TEST_MODES, f"{engine.modes_names_get()=}"
 
 geometry = factory.create_new_geometry()
 assert geometry.axis_names_get() == TEST_AXIS_LIST
 
-print("All tests finished successfully.")
+print(f"All tests (in {__file__!r}) finished successfully.")
