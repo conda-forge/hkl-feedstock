@@ -43,6 +43,9 @@ test:
     - conda-verify
     - pip
     - python <3.12
+  downstreams:
+    - hklpy
+    - hklpy2
 
 about:
   home: http://repo.or.cz/w/hkl.git
