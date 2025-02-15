@@ -46,8 +46,9 @@ test:
     - conda-verify
     - pip
     - python <3.12
+    - tiled  # TODO
   downstreams:
-    # - hklpy  # FIXME: fails due to missing tiled package, test.requires?
+    - hklpy  # FIXME: fails due to missing tiled package, test.requires?
     - hklpy2
 
 about:
