@@ -1,13 +1,16 @@
 {% set name = "hkl" %}
-{% set version = "5.1.2.3679" %}
-{% set git_hash = "f766ae40b7c1cdccf47c9ef5deae6a1534dc7f2a" %}
+# https://repo.or.cz/hkl.git
+# git rev-list --count REFERENCE
+# sha256sum GIT_HASH.tar.gz
+{% set version = "5.1.3.3561" %}
+{% set git_hash = "90c8704b08238a74f7ad4c9f7bf2692231eb60ad" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  sha256: "bcc510259f279745e42a04aced1074dd7892b68bc83214b86a77323f1d2d0d49"
+  sha256: "6ad0dcbfbb503835da7b7bf116b78213d538422b9e3c481f2d767d896b62e618"
   url: https://repo.or.cz/hkl.git/snapshot/{{ git_hash }}.tar.gz
 
 build:
