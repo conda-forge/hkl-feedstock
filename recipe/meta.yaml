@@ -47,7 +47,7 @@ test:
     - pip
     - python <3.12
   downstreams:
-    - hklpy
+    # - hklpy  # FIXME: fails due to missing tiled package, test.requires?
     - hklpy2
 
 about:
