@@ -28,11 +28,11 @@ requirements:
     - autoconf-archive
     - automake
     - conda-verify
-    - glib
+    # - glib
     - glib-tools
     - gobject-introspection
     - gsl
-    - libglib
+    # - libglib
     - libcblas
     - libtool
     - m4
