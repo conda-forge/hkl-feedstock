@@ -30,7 +30,7 @@ requirements:
     - conda-verify
     - glib
     - glib-tools
-    # - gobject-introspection
+    - gobject-introspection
     - gsl
     - libglib
     - libcblas
