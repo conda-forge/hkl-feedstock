@@ -1,13 +1,11 @@
 c_compiler:
 - gcc
 c_compiler_version:
-- '13'
+- '14'
 c_stdlib:
 - sysroot
 c_stdlib_version:
 - '2.17'
-cdt_name:
-- conda
 channel_sources:
 - conda-forge
 channel_targets:
@@ -19,7 +17,7 @@ glib:
 gsl:
 - '2.7'
 libcblas:
-- 3.9 *netlib
+- 3.9.* *netlib
 target_platform:
 - linux-64
 zlib:
