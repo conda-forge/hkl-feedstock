@@ -38,8 +38,8 @@ requirements:
     - m4
     - zlib
   run:
-    - glib 2.86.*
-    - gobject-introspection
+    # - glib 2.86.*
+    - gobject-introspection 1.84.*
     - libglib 2.86.*
     - pygobject
 
