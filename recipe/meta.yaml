@@ -28,19 +28,18 @@ requirements:
     - autoconf-archive
     - automake
     - conda-verify
-    - glib # 2.86.0
-    - glib-tools # 2.86.0
-    - gobject-introspection # 1.84.0
+    - glib
+    - glib-tools
+    - gobject-introspection
     - gsl
     - libcblas
-    - libglib # 2.86.0
+    - libglib
     - libtool
     - m4
     - zlib
   run:
-    # - glib 2.86.0
-    - gobject-introspection # 1.84.0
-    - libglib # 2.86.0
+    - gobject-introspection
+    - libglib
     - pygobject
 
 test:

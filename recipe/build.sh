@@ -21,13 +21,9 @@ grep AM_DISTCHECK_CONFIGURE_FLAGS Makefile.am
 printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
 bash ./autogen.sh
 
-# Use $ORIGIN so the installed package is relocatable by conda.
-# Quote/escape $ORIGIN so the shell does not expand it here.
 ORIGIN_RPATH='\$ORIGIN/../lib'
-# If your package installs into lib64, change to '\$ORIGIN/../lib64'
 RPATH_FLAG="-Wl,-rpath,${ORIGIN_RPATH}"
 
-# Export flags used by autotools configure
 export LDFLAGS="${LDFLAGS:-} ${RPATH_FLAG}"
 export CPPFLAGS="${CPPFLAGS:-} -I${PREFIX}/include"
 export CFLAGS="${CFLAGS:-}"
