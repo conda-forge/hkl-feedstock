@@ -10,7 +10,7 @@ package:
   version: {{ version }}
 
 source:
-  sha256: "ea5a2d845c12c18ac3230483968ffb3ce1d611e1453814bb5fda7262effb4990"
+  sha256: "dd7728440be9b5437d38aaa2bcfcff3eaf21b09d9d57c6cb7636b9524ab722de"
   url: https://repo.or.cz/hkl.git/snapshot/{{ git_hash }}.tar.gz
 
 build:
