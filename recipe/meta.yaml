@@ -2,15 +2,16 @@
 # https://repo.or.cz/hkl.git
 # git rev-list --count REFERENCE
 # sha256sum GIT_HASH.tar.gz
-{% set version = "5.1.3.3561" %}
-{% set git_hash = "90c8704b08238a74f7ad4c9f7bf2692231eb60ad" %}
+{% set version = "5.1.4.3765" %}
+{% set git_hash = "e4de11fc75583bee7bbac661bb6488eb95d210aa" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  sha256: "6ad0dcbfbb503835da7b7bf116b78213d538422b9e3c481f2d767d896b62e618"
+  sha256: 2faa5145a09dab40b59b982e7eea109feea6ca172a0bb42c76b4afa258a4b5f3
+  # sha256: "ea5a2d845c12c18ac3230483968ffb3ce1d611e1453814bb5fda7262effb4990"
   url: https://repo.or.cz/hkl.git/snapshot/{{ git_hash }}.tar.gz
 
 build:
