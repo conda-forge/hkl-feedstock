@@ -27,3 +27,6 @@
 /output
 # Pixi's configuration
 .pixi
+
+# local developer files
+.nogit_*
