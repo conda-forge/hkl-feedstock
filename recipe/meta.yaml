@@ -1,17 +1,23 @@
 {% set name = "hkl" %}
 # https://repo.or.cz/hkl.git
 # git rev-list --count REFERENCE
-# sha256sum GIT_HASH.tar.gz
-{% set version = "5.1.3.3561" %}
-{% set git_hash = "90c8704b08238a74f7ad4c9f7bf2692231eb60ad" %}
+{% set version = "5.1.4.3765" %}
+# Tag v5.1.4 → commit hash below.  Pinning the SHA (not the tag) is the
+# conda-forge convention and avoids problems with shallow clones not
+# fetching tags from branches other than the remote default.
+{% set git_rev = "e4de11fc75583bee7bbac661bb6488eb95d210aa" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  sha256: "6ad0dcbfbb503835da7b7bf116b78213d538422b9e3c481f2d767d896b62e618"
-  url: https://repo.or.cz/hkl.git/snapshot/{{ git_hash }}.tar.gz
+  # NOTE: repo.or.cz now serves an Anubis anti-bot HTML challenge instead of
+  # tarball snapshots to non-browser clients (conda-forge CI included), so the
+  # tarball SHA256 churns and never matches.  Fetching via git smart-HTTP is
+  # unaffected by Anubis and reproducibly delivers the source tree.
+  git_url: https://repo.or.cz/hkl.git
+  git_rev: {{ git_rev }}
 
 build:
   number: 0
@@ -22,6 +28,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ stdlib('c') }}
     - autoconf
+    - git
     - make
     - pkg-config
   host:
