@@ -176,14 +176,13 @@ if [ "$IS_WIN" = 0 ]; then
     export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${BUILD_PREFIX}/lib/pkgconfig"
 fi
 
-if [ "$IS_WIN" = 1 ]; then
-    # __STRING(x) is a glibc-only macro (#define __STRING(x) #x) that
-    # hkl/hkl-parameter-private.h uses for assertion messages. MSVCs
-    # CRT headers do not provide it. Define it via -D so the source
-    # compiles on Windows without patching.
-    export CPPFLAGS="${CPPFLAGS} -D'__STRING(x)=#x'"
-    printf "### ---> (win) CPPFLAGS=%s\n" "${CPPFLAGS}"
-fi
+# NOTE: An earlier iteration tried `-D'__STRING(x)=#x'` in CPPFLAGS
+# on Windows to provide the glibc-only __STRING() macro that
+# hkl-parameter-private.h uses.  That broke configure's compiler-
+# works check (bash quoting through cmd.exe -> compiler mangles the
+# `#`).  The proper fix is a small recipe patch to
+# hkl-parameter-private.h adding `#ifndef __STRING ... #endif` --
+# deferred along with the larger metalang99-on-Windows issue.
 
 # configure.ac uses AX_PATH_GSL from autoconf-archive to discover GSL,
 # but conda-forge's autoconf-archive 2021.02.19 does not ship that
