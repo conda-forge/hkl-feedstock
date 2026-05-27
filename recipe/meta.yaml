@@ -18,22 +18,37 @@ source:
   # unaffected by Anubis and reproducibly delivers the source tree.
   git_url: https://repo.or.cz/hkl.git
   git_rev: {{ git_rev }}
+  patches:
+    # See patches/README.md for the rationale and upstream status of each patch.
+    - patches/0001-ccan-configurator-build-host-binary.patch
+    - patches/0002-coroutine-bump-min-stksz-for-macos.patch
 
 build:
   number: 0
-  skip: True  # [py<39 or win or osx]
+  skip: True  # [py<39 or win]
 
 requirements:
   build:
     - {{ compiler('c') }}
     - {{ stdlib('c') }}
+    # Autotools toolchain runs on the build host; must be in `build:`,
+    # not `host:`, so cross-builds get the build-platform-native binaries.
     - autoconf
+    - autoconf-archive
+    - automake
+    - libtool
+    - m4
     - git
     - make
     - pkg-config
+    # gobject-introspection ships introspection.m4 (used by
+    # GOBJECT_INTROSPECTION_CHECK in configure.ac at autoreconf time) and
+    # the g-ir-scanner / g-ir-compiler binaries; all run build-side.
+    - gobject-introspection
+    # When cross-compiling, the build host also needs glib's pkg-config /
+    # tools so AM_PATH_GLIB_2_0 and g-ir-scanner can resolve glib.
+    - glib  # [build_platform != target_platform]
   host:
-    - autoconf-archive
-    - automake
     - conda-verify
     - glib
     - glib-tools
@@ -41,8 +56,9 @@ requirements:
     - gsl
     - libcblas
     - libglib
-    - libtool
-    - m4
+    # macOS libc lacks GNU libintl that gettext-using autotools projects
+    # probe for; conda-forge ships libintl-devel as the shim.
+    - libintl-devel  # [not linux]
     - zlib
   run:
     - gobject-introspection
