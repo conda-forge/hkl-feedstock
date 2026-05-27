@@ -6,12 +6,22 @@ github:
   tooling_branch_name: main
 conda_build:
   pkg_format: '2'
-# Cross-build osx-arm64 from linux-64. The osx-64 build is already
-# implicitly cross-built from linux-64 (default conda-forge behavior).
-# Declaring osx_arm64 here ensures the build runs in the same linux-64
-# Azure agent as osx-64 rather than queueing on Apple Silicon runners,
-# and lets `build-locally.py osx_arm64_` work on a Linux host.
+# Cross-build BOTH osx targets from linux-64. We must force osx_64
+# here too (conda-forge's default is to run osx_64 natively on macOS
+# Azure runners). When osx_64 runs natively, ccan's HAVE_UCONTEXT
+# probe in hkl/ccan/configurator runs on macOS and correctly returns
+# 0 (macOS 11+ deprecated the ucontext routines and the probe binary
+# aborts -- in part because static `char stack[16384]` < MINSIGSTKSZ
+# (32768) on macOS 11+, which is exactly the gap our recipe
+# patches/0002 closes for the *library* build but not for the
+# configurator probe itself). The cascade is:
+#     HAVE_UCONTEXT=0 -> COROUTINE_AVAILABLE=0 ->
+#     hkl/ccan/generator/generator.h:23: #error Generators require coroutines
+# Cross-building from linux_64 sidesteps the probe failure because
+# our patches/0001 makes configurator run with --configurator-cc set
+# to the build-host (Linux) compiler, where ucontext works.
 build_platform:
+  osx_64: linux_64
   osx_arm64: linux_64
 # Cross-built osx packages cannot be tested on the Linux build host:
 # the test env needs __osx >=11.0 (virtual package), which Linux does
