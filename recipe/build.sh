@@ -74,12 +74,13 @@ grep gtkdocize autogen.sh
 grep GTK_DOC configure.ac
 grep AM_DISTCHECK_CONFIGURE_FLAGS Makefile.am
 
-# On macOS, Apple Clang does not accept GCC's -ftrack-macro-expansion=0.
-# configure.ac unconditionally sets DATATYPE99_CFLAGS to include this flag.
-# Strip it on macOS; it's only useful for prettier preprocessor error
-# messages with the datatype99 sum-type library, which is disabled here.
-if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" == *darwin* ]]; then
-    printf "### ---> (%s) Stripping GCC-only -ftrack-macro-expansion=0 on macOS ... \n" $(date -Iseconds)
+# Apple Clang (macOS) and clang-on-Windows do not accept GCC's
+# -ftrack-macro-expansion=0.  configure.ac unconditionally sets
+# DATATYPE99_CFLAGS to include this flag.  Strip it on non-Linux;
+# it's only useful for prettier preprocessor error messages with the
+# datatype99 sum-type library, which is disabled here.
+if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" == *darwin* ]] || [ "$IS_WIN" = 1 ]; then
+    printf "### ---> (%s) Stripping GCC-only -ftrack-macro-expansion=0 ... \n" $(date -Iseconds)
     sed -i.bak -e 's/-ftrack-macro-expansion=0//g' configure.ac
     grep -n 'track-macro' configure.ac || echo "  (flag removed)"
 fi
