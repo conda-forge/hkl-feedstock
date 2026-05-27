@@ -1,7 +1,7 @@
 {% set name = "hkl" %}
 # https://repo.or.cz/hkl.git
 # git rev-list --count REFERENCE
-{% set version = "5.1.5.3845" %}
+{% set version = "5.1.9.3845" %}
 # Git commit hash below.  Pinning the SHA (not the tag) is the
 # conda-forge convention and avoids problems with shallow clones not
 # fetching tags from branches other than the remote default.
