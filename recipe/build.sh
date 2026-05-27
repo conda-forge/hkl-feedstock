@@ -272,6 +272,18 @@ make_extra=(
     "INTROSPECTION_SCANNER=${BUILD_PREFIX}/bin/g-ir-scanner"
     "INTROSPECTION_COMPILER=${BUILD_PREFIX}/bin/g-ir-compiler"
 )
+# Pass _XOPEN_SOURCE / _DARWIN_C_SOURCE to ccan's configurator probes via
+# CCAN_CFLAGS (the make var referenced by hkl/ccan/Makefile.am's
+# `configurator ... $(CCAN_CFLAGS)` invocation). Without this, the
+# HAVE_UCONTEXT probe fails on macOS because <ucontext.h> #errors out
+# unless _XOPEN_SOURCE is defined, which then leaves COROUTINE_AVAILABLE=0
+# and generator.h fires `#error Generators require coroutines`. The flags
+# are otherwise already in CFLAGS (set above for darwin), but configurator
+# probes do not pick up CFLAGS -- they receive only what is on their
+# command line.
+if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" == *darwin* ]]; then
+    make_extra+=("CCAN_CFLAGS=-D_XOPEN_SOURCE -D_DARWIN_C_SOURCE")
+fi
 make -j "${CPU_COUNT:-1}" "${make_extra[@]}"
 
 printf "### ---> (%s) Running make install ... \n" $(date -Iseconds)
