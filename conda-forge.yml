@@ -6,3 +6,10 @@ github:
   tooling_branch_name: main
 conda_build:
   pkg_format: '2'
+# Cross-build osx-arm64 from linux-64. The osx-64 build is already
+# implicitly cross-built from linux-64 (default conda-forge behavior).
+# Declaring osx_arm64 here ensures the build runs in the same linux-64
+# Azure agent as osx-64 rather than queueing on Apple Silicon runners,
+# and lets `build-locally.py osx_arm64_` work on a Linux host.
+build_platform:
+  osx_arm64: linux_64
