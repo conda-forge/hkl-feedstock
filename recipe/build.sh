@@ -121,6 +121,26 @@ if [ "$IS_WIN" = 1 ]; then
     grep -nE 'AX_' configure.ac || echo "  (no AX_* macros remain)"
 fi
 
+if [ "$IS_WIN" = 1 ]; then
+    # hkl/ccan/configurator.c #includes <unistd.h>, which clang-on-
+    # Windows (autotools_clang_conda toolchain) does not provide.
+    # Rather than port configurator.c (whose probe-by-compile-and-run
+    # design is also broken for cross-builds), drop in a hand-curated
+    # ccan_config.h that reflects clang-on-Windows-MSVC, and rewrite
+    # the ccan/Makefile.am rules so make does not try to build
+    # configurator or run it to regenerate ccan_config.h.
+    printf "### ---> (%s) (win) Installing hand-curated ccan_config.h ... \n" $(date -Iseconds)
+    cp "${RECIPE_DIR}/ccan_config.h.win-64" hkl/ccan/ccan_config.h
+    # Replace the configurator-builds-itself rule body with an echo no-op.
+    # Match the action line (starts with tab then $(CC_FOR_BUILD)) and
+    # replace it with a tab + echo line.
+    sed -i.bak -E "s|^	\\\$\\(CC_FOR_BUILD\\).*|	@echo '(win) configurator build skipped'|" hkl/ccan/Makefile.am
+    # Replace the configurator-generates-ccan_config.h rule body the same way.
+    sed -i.bak -E "s|^	\\\$\\(builddir\\)/configurator.*|	@echo '(win) ccan_config.h is provided by recipe'|" hkl/ccan/Makefile.am
+    echo "--- hkl/ccan/Makefile.am after Windows fix-up ---"
+    head -20 hkl/ccan/Makefile.am
+fi
+
 printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
 # Make sure autoreconf/aclocal find conda-forge-installed m4 macros
 # (AX_PATH_GSL, AM_PATH_GLIB_2_0, GOBJECT_INTROSPECTION_CHECK, etc.)
