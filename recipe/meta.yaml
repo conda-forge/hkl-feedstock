@@ -56,12 +56,14 @@ requirements:
     - pkg-config             # [unix]
     # gobject-introspection ships introspection.m4 (used by
     # GOBJECT_INTROSPECTION_CHECK in configure.ac at autoreconf time) and
-    # the g-ir-scanner / g-ir-compiler binaries; all run build-side.
-    # Skipped on Windows for now: the introspection cross-build
-    # machinery in this recipe is not yet adapted to MinGW/clang-on-win,
-    # so we drop --enable-introspection on Windows and ship only the
-    # libhkl DLL + headers + import lib + pkg-config file.
-    - gobject-introspection  # [unix]
+    # the g-ir-scanner / g-ir-compiler binaries.  We need it in
+    # build: on ALL platforms because configure.ac uses
+    # GOBJECT_INTROSPECTION_CHECK + AM_COND_IF([HAVE_INTROSPECTION], ...)
+    # -- without the m4 macro present at autoreconf, AM_COND_IF errors
+    # out with "no such condition HAVE_INTROSPECTION".
+    # The actual --enable-introspection toggle in build.sh is still
+    # `no` on Windows (we ship only libhkl.dll without the GI typelib).
+    - gobject-introspection
     # When cross-compiling, the build host also needs glib's pkg-config /
     # tools so AM_PATH_GLIB_2_0 and g-ir-scanner can resolve glib.
     - glib  # [unix and build_platform != target_platform]

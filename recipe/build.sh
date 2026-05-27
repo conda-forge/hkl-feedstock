@@ -96,12 +96,21 @@ if [ "$IS_WIN" = 1 ]; then
 fi
 
 printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
-# Make sure autoreconf/aclocal find autoconf-archive's m4 macros (AX_PATH_GSL,
-# AX_CFLAGS_WARN_ALL, etc.) from the build prefix. Without this, aclocal
-# silently misses them on cross-builds where the host prefix is searched
-# first, leaving e.g. GSL_LIBS empty in the generated Makefiles and
-# producing "Undefined symbols: _gsl_*" at link time on macOS.
-export ACLOCAL_PATH="${BUILD_PREFIX}/share/aclocal${ACLOCAL_PATH:+:${ACLOCAL_PATH}}"
+# Make sure autoreconf/aclocal find conda-forge-installed m4 macros
+# (AX_PATH_GSL, AM_PATH_GLIB_2_0, GOBJECT_INTROSPECTION_CHECK, etc.)
+# from the build prefix. Without this, aclocal silently misses them
+# and configure.ac's macros stay unexpanded (treated as shell words),
+# leaving variables like GSL_LIBS empty in the generated Makefiles
+# and producing later link errors.
+#
+# On Windows, conda-forge installs Unix-tooling files under
+# $BUILD_PREFIX/Library/share/aclocal rather than $BUILD_PREFIX/share/
+# aclocal -- match both for portability across Unix and Windows.
+ACLOCAL_PATH_EXTRA="${BUILD_PREFIX}/share/aclocal"
+if [ "$IS_WIN" = 1 ]; then
+    ACLOCAL_PATH_EXTRA="${BUILD_PREFIX}/Library/share/aclocal:${ACLOCAL_PATH_EXTRA}"
+fi
+export ACLOCAL_PATH="${ACLOCAL_PATH_EXTRA}${ACLOCAL_PATH:+:${ACLOCAL_PATH}}"
 printf "### ---> ACLOCAL_PATH=%s\n" "${ACLOCAL_PATH}"
 bash ./autogen.sh
 
