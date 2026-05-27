@@ -93,6 +93,32 @@ if [ "$IS_WIN" = 1 ]; then
     printf "### ---> (%s) Patching AC_PREREQ down to 2.71 for Windows m2-autoconf ... \n" $(date -Iseconds)
     sed -i.bak -e 's/AC_PREREQ(\[2\.72\])/AC_PREREQ([2.71])/' configure.ac
     grep -n 'AC_PREREQ' configure.ac
+
+    # Strip autoconf-archive (AX_*) macros: conda-forge does not ship
+    # autoconf-archive for win-64, so AX_CFLAGS_WARN_ALL,
+    # AX_CXXFLAGS_WARN_ALL, AX_PATH_GSL, and AX_CHECK_COMPILE_FLAG are
+    # unexpanded by autoreconf -> they remain as literal shell-syntax
+    # in configure (which fails with `syntax error near unexpected
+    # token` on the bracketed multi-arg ones).
+    #
+    # None of them are essential:
+    #   - AX_CFLAGS_WARN_ALL / AX_CXXFLAGS_WARN_ALL just set -Wall-ish
+    #     flags that the build does not depend on for correctness
+    #   - AX_PATH_GSL is already worked around by passing
+    #     GSL_CFLAGS=/GSL_LIBS= to ./configure (we get them from
+    #     pkg-config)
+    #   - AX_CHECK_COMPILE_FLAG is only used inside the
+    #     --enable-analyzer block (default-off); the m4 is still
+    #     emitted by autom4te even when the AM_COND_IF runtime guard
+    #     is false, so we still need to neutralise it
+    #
+    # Replace each problematic call with `:` (the shell no-op).
+    printf "### ---> (%s) Neutralising autoconf-archive AX_* macros on Windows ... \n" $(date -Iseconds)
+    sed -i.bak -e 's/^AX_CFLAGS_WARN_ALL.*/:  # was AX_CFLAGS_WARN_ALL (autoconf-archive not avail on win)/' configure.ac
+    sed -i.bak -e 's/^AX_CXXFLAGS_WARN_ALL.*/:  # was AX_CXXFLAGS_WARN_ALL/' configure.ac
+    sed -i.bak -e 's/^AX_PATH_GSL.*/:  # was AX_PATH_GSL (we pass GSL_CFLAGS\/GSL_LIBS to .\/configure)/' configure.ac
+    sed -i.bak -e 's/AX_CHECK_COMPILE_FLAG(\[-fanalyzer\].*/:  # was AX_CHECK_COMPILE_FLAG -fanalyzer (analyzer block default-off)/' configure.ac
+    grep -nE 'AX_' configure.ac || echo "  (no AX_* macros remain)"
 fi
 
 printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
@@ -103,12 +129,13 @@ printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
 # leaving variables like GSL_LIBS empty in the generated Makefiles
 # and producing later link errors.
 #
-# On Windows, conda-forge installs Unix-tooling files under
-# $BUILD_PREFIX/Library/share/aclocal rather than $BUILD_PREFIX/share/
-# aclocal -- match both for portability across Unix and Windows.
+# On Windows, conda-forge installs Unix-tooling files in the build env
+# under $BUILD_PREFIX/Library/share/aclocal (rather than just
+# $BUILD_PREFIX/share/aclocal); for the host env, $PREFIX already
+# includes the trailing /Library so $PREFIX/share/aclocal is right.
 ACLOCAL_PATH_EXTRA="${BUILD_PREFIX}/share/aclocal"
 if [ "$IS_WIN" = 1 ]; then
-    ACLOCAL_PATH_EXTRA="${BUILD_PREFIX}/Library/share/aclocal:${ACLOCAL_PATH_EXTRA}"
+    ACLOCAL_PATH_EXTRA="${BUILD_PREFIX}/Library/share/aclocal:${PREFIX}/share/aclocal:${ACLOCAL_PATH_EXTRA}"
 fi
 export ACLOCAL_PATH="${ACLOCAL_PATH_EXTRA}${ACLOCAL_PATH:+:${ACLOCAL_PATH}}"
 printf "### ---> ACLOCAL_PATH=%s\n" "${ACLOCAL_PATH}"
@@ -149,9 +176,12 @@ if [ "$IS_WIN" = 1 ]; then
     # %BUILD_PREFIX%\Library\bin\pkg-config but bash's PATH translation
     # makes plain `pkg-config` find it).
     PKG_CONFIG=pkg-config
-    # Tell pkg-config where to find the host-env .pc files (gsl, glib).
-    # conda-forge Windows packages install them under Library/lib/pkgconfig.
-    export PKG_CONFIG_PATH="${PREFIX}/Library/lib/pkgconfig:${BUILD_PREFIX}/Library/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+    # Tell pkg-config where to find host-env and build-env .pc files.
+    # Note: on Windows conda-build, $PREFIX already ends in `/Library`
+    # (where Unix-style files live), but $BUILD_PREFIX does NOT --
+    # the build prefix Library is at $BUILD_PREFIX/Library. So the
+    # two paths are constructed differently:
+    export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig:${BUILD_PREFIX}/Library/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
     printf "### ---> (win) PKG_CONFIG_PATH=%s\n" "${PKG_CONFIG_PATH}"
 fi
 export GSL_CFLAGS="$(${PKG_CONFIG} --cflags gsl)"
@@ -393,13 +423,16 @@ make install "${make_extra[@]}"
 # -----------------------------------------------------------------------------
 # Windows: no introspection was built, so no typelib to rewrite, and
 # no shared-library SONAME concept. Just verify the DLL is installed.
+# Note: on Windows conda-build's bash environment, $PREFIX already
+# includes the trailing /Library, so $PREFIX/bin (not
+# $PREFIX/Library/bin) is the executable / DLL install location.
 if [ "$IS_WIN" = 1 ]; then
     printf "### ---> (%s) Windows target; skipping typelib block. \n" $(date -Iseconds)
     # autotools+libtool's MSVC-compat output names: hkl-5.dll + hkl.lib
     # (import lib) under $LIBRARY_BIN / $LIBRARY_LIB respectively.
     # Check that *something* libhkl-shaped landed in the install.
-    ls -l "${PREFIX}"/Library/bin/*hkl*.dll "${PREFIX}"/Library/lib/*hkl*.lib 2>&1 || true
-    ls -l "${PREFIX}"/Library/lib/pkgconfig/hkl.pc 2>&1 || true
+    ls -l "${PREFIX}"/bin/*hkl*.dll "${PREFIX}"/lib/*hkl*.lib 2>&1 || true
+    ls -l "${PREFIX}"/lib/pkgconfig/hkl.pc 2>&1 || true
 # Gate on the *target* platform, not the build host: on cross-builds
 # `uname -s` would return Linux even when targeting macOS, taking the
 # wrong branch.

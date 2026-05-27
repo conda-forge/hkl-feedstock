@@ -8,9 +8,21 @@ import sys
 # (see recipe/build.sh's IS_WIN branch). Skip the gi-based tests and
 # just verify the DLL + import lib + pkg-config landed in the install.
 if sys.platform == "win32":
-    prefix = pathlib.Path(os.environ["PREFIX"])
-    bin_dir = prefix / "Library" / "bin"
-    lib_dir = prefix / "Library" / "lib"
+    # On Windows conda-build, $PREFIX may or may not already include the
+    # trailing "Library" depending on the test context.  Probe and use
+    # whichever variant exists.
+    prefix_env = pathlib.Path(os.environ["PREFIX"])
+    candidates = [prefix_env, prefix_env / "Library"]
+    bin_dir = None
+    for cand in candidates:
+        if (cand / "bin").is_dir():
+            bin_dir = cand / "bin"
+            lib_dir = cand / "lib"
+            break
+    assert bin_dir is not None, (
+        f"could not find Library/ layout under PREFIX={prefix_env!r}; "
+        f"tried {[str(c) for c in candidates]}"
+    )
     pkgconfig = lib_dir / "pkgconfig" / "hkl.pc"
     dlls = list(bin_dir.glob("*hkl*.dll"))
     imp_libs = list(lib_dir.glob("*hkl*.lib"))
