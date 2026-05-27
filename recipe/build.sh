@@ -76,7 +76,6 @@ export CPPFLAGS="${CPPFLAGS:-} -I${PREFIX}/include"
 export CFLAGS="${CFLAGS:-}"
 export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${BUILD_PREFIX}/lib/pkgconfig"
 
-printf "### ---> (%s) Running configure ... \n" $(date -Iseconds)
 # configure.ac uses AX_PATH_GSL from autoconf-archive to discover GSL,
 # but conda-forge's autoconf-archive 2021.02.19 does not ship that
 # macro -- aclocal silently leaves it unexpanded, so configure ends up
@@ -97,6 +96,103 @@ export GSL_LIBS="$(${PKG_CONFIG} --libs gsl)"
 printf "### ---> GSL_CFLAGS=%s\n" "${GSL_CFLAGS}"
 printf "### ---> GSL_LIBS=%s\n" "${GSL_LIBS}"
 
+# ----------------------------------------------------------------------------
+# Cross-compilation native-build dance for GObject-Introspection.
+#
+# g-ir-scanner introspects a C library by compiling AND running a small
+# probe binary linked against it. In a cross-build, the probe binary is
+# target-arch and cannot run on the build host -- the host-prefix's
+# g-ir-scanner ends up failing the introspection step.
+#
+# Standard conda-forge solution (used by harfbuzz, pango, gdk-pixbuf, atk):
+# do a *separate* native build of the package first, with all CC/AR/NM
+# pointing at $CC_FOR_BUILD, installing into $BUILD_PREFIX. During that
+# native build, set GI_CROSS_LAUNCHER=$BUILD_PREFIX/libexec/gi-cross-
+# launcher-save.sh, which captures the probe binary's stdout/files into
+# $SRC_DIR/saved-<basename>. Then for the cross build, set
+# GI_CROSS_LAUNCHER=$BUILD_PREFIX/libexec/gi-cross-launcher-load.sh,
+# which replays the saved output instead of trying to run the
+# (non-runnable) target binary.
+#
+# Assumption: the introspected symbol set is the same for native and
+# cross builds. True for hkl: no platform-conditional public API.
+# ----------------------------------------------------------------------------
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
+    printf "### ---> (%s) Cross-build detected; running native pre-build for g-ir-scanner ... \n" $(date -Iseconds)
+    (
+        mkdir -p native-build
+        cd native-build
+
+        # Override the cross-compile environment with a native-build one.
+        # Must override every toolchain binary, not just CC -- libtool also
+        # uses RANLIB (otherwise the target ranlib runs on the build-host
+        # archive and silently corrupts it: e.g. x86_64-apple-darwin13-ranlib
+        # on a Linux ar archive writes BSD `__.SYMDEF SORTED` (`/`) as the
+        # first member, which subsequent libtool `ar x` extractions choke on
+        # with "illegal output pathname for archive member: /").
+        export CC="${CC_FOR_BUILD}"
+        export AR="$(${CC_FOR_BUILD} -print-prog-name=ar)"
+        export NM="$(${CC_FOR_BUILD} -print-prog-name=nm)"
+        export RANLIB="$(${CC_FOR_BUILD} -print-prog-name=ranlib)"
+        export STRIP="$(${CC_FOR_BUILD} -print-prog-name=strip)"
+        export LD="$(${CC_FOR_BUILD} -print-prog-name=ld)"
+        # Drop target-specific CFLAGS/CPPFLAGS; build host doesn't need
+        # them and they may include incompatible flags (e.g.
+        # -mmacosx-version-min for the compiler).
+        unset CFLAGS
+        unset CPPFLAGS
+        # Replace target LDFLAGS (Mach-O-only -Wl,-headerpad_max_install_names
+        # and -Wl,-dead_strip_dylibs that GNU ld rejects with
+        # "unable to disambiguate") with build-host-appropriate ones.
+        # Must still include -L$BUILD_PREFIX/lib and rpath so that
+        # AM_PATH_GLIB_2_0's compile-and-run test finds the build-prefix
+        # glib instead of the AlmaLinux system glib (glib2-2.68.4),
+        # which produces "pkg-config returned 2.88.1, but GLIB (2.68.4)"
+        # and leaves GLIB_MKENUMS empty -> later make failures.
+        export LDFLAGS="-L${BUILD_PREFIX}/lib -Wl,-rpath,${BUILD_PREFIX}/lib"
+        # Tell configure this is a native build (avoid the autoconf
+        # cross-compile guessing that fires when build != host).
+        export host_alias="${build_alias}"
+        # PKG_CONFIG_PATH=$BUILD_PREFIX so .pc files come from the
+        # build-side gsl/glib/etc., with native paths baked into them.
+        export PKG_CONFIG_PATH="${BUILD_PREFIX}/lib/pkgconfig"
+
+        # Recompute GSL_LIBS/GSL_CFLAGS in the native env (different prefix).
+        export GSL_CFLAGS="$(${PKG_CONFIG} --cflags gsl)"
+        export GSL_LIBS="$(${PKG_CONFIG} --libs gsl)"
+        printf "### ---> (native) GSL_CFLAGS=%s\n" "${GSL_CFLAGS}"
+        printf "### ---> (native) GSL_LIBS=%s\n" "${GSL_LIBS}"
+
+        printf "### ---> (%s) (native) Running ../configure ... \n" $(date -Iseconds)
+        ../configure \
+            --prefix="${BUILD_PREFIX}" \
+            --disable-static \
+            --disable-binoculars \
+            --disable-gui \
+            --disable-hkl-doc \
+            --enable-introspection=yes \
+            GSL_CFLAGS="${GSL_CFLAGS}" \
+            GSL_LIBS="${GSL_LIBS}" \
+            LDFLAGS="${LDFLAGS}"
+
+        # Tell g-ir-scanner to *save* the probe binary's output for the
+        # later cross-build to replay.
+        export GI_CROSS_LAUNCHER="${BUILD_PREFIX}/libexec/gi-cross-launcher-save.sh"
+
+        printf "### ---> (%s) (native) Running make ... \n" $(date -Iseconds)
+        make -j "${CPU_COUNT:-1}"
+
+        printf "### ---> (%s) (native) Running make install ... \n" $(date -Iseconds)
+        make install
+    )
+    # After the native build completes, the saved introspection data
+    # lives in $SRC_DIR/saved-Hkl-5.0.gir/. Switch the cross-build to
+    # replay-mode for g-ir-scanner.
+    export GI_CROSS_LAUNCHER="${BUILD_PREFIX}/libexec/gi-cross-launcher-load.sh"
+    printf "### ---> Native pre-build done; cross build will use GI_CROSS_LAUNCHER=%s\n" "${GI_CROSS_LAUNCHER}"
+fi
+
+printf "### ---> (%s) Running configure ... \n" $(date -Iseconds)
 ./configure \
   --prefix="${PREFIX}" \
   --disable-static \
@@ -111,10 +207,21 @@ printf "### ---> GSL_LIBS=%s\n" "${GSL_LIBS}"
 # printf "### ---> DIR : %s\n" $(ls)
 
 printf "### ---> (%s) Running make ... \n" $(date -Iseconds)
-make -j "${CPU_COUNT:-1}"
+# When cross-compiling, override INTROSPECTION_SCANNER / _COMPILER to use
+# the build-prefix binaries (Linux-native, modern Python) instead of the
+# host-prefix ones (target Python, often unable to import because of
+# distutils/setuptools differences). GI_CROSS_LAUNCHER (set earlier when
+# CONDA_BUILD_CROSS_COMPILATION=1) tells the scanner to replay the saved
+# native-build probe output instead of trying to run a target binary.
+make_extra=()
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
+    make_extra+=("INTROSPECTION_SCANNER=${BUILD_PREFIX}/bin/g-ir-scanner")
+    make_extra+=("INTROSPECTION_COMPILER=${BUILD_PREFIX}/bin/g-ir-compiler")
+fi
+make -j "${CPU_COUNT:-1}" "${make_extra[@]}"
 
 printf "### ---> (%s) Running make install ... \n" $(date -Iseconds)
-make install
+make install "${make_extra[@]}"
 
 # -----------------------------------------------------------------------------
 # Rewrite the GObject-Introspection typelib so it stores the *absolute* path

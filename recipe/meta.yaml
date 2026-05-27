@@ -48,6 +48,11 @@ requirements:
     # When cross-compiling, the build host also needs glib's pkg-config /
     # tools so AM_PATH_GLIB_2_0 and g-ir-scanner can resolve glib.
     - glib  # [build_platform != target_platform]
+    # When cross-compiling, build.sh performs a native pre-build of the
+    # package (so g-ir-scanner can run a native probe binary). That
+    # native build needs the same C-library deps in the build prefix:
+    - gsl  # [build_platform != target_platform]
+    - libcblas  # [build_platform != target_platform]
   host:
     - conda-verify
     - glib
