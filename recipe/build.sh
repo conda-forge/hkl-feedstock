@@ -149,6 +149,10 @@ if [ "$IS_WIN" = 1 ]; then
     # %BUILD_PREFIX%\Library\bin\pkg-config but bash's PATH translation
     # makes plain `pkg-config` find it).
     PKG_CONFIG=pkg-config
+    # Tell pkg-config where to find the host-env .pc files (gsl, glib).
+    # conda-forge Windows packages install them under Library/lib/pkgconfig.
+    export PKG_CONFIG_PATH="${PREFIX}/Library/lib/pkgconfig:${BUILD_PREFIX}/Library/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+    printf "### ---> (win) PKG_CONFIG_PATH=%s\n" "${PKG_CONFIG_PATH}"
 fi
 export GSL_CFLAGS="$(${PKG_CONFIG} --cflags gsl)"
 export GSL_LIBS="$(${PKG_CONFIG} --libs gsl)"

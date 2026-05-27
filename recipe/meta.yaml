@@ -43,7 +43,10 @@ requirements:
     # *build* env so autoreconf can find it; put glib in build: too on
     # win (it's already in host: for the library link).
     - glib  # [win]
-    - pkg-config  # [win]
+    # pkgconf ships Library/share/aclocal/pkg.m4 on win-64 (the older
+    # pkg-config package does not).  Without pkg.m4, PKG_PROG_PKG_CONFIG
+    # is unexpanded -> shell syntax error inside configure.
+    - pkgconf  # [win]
     # Autotools toolchain runs on the build host; must be in `build:`,
     # not `host:`, so cross-builds get the build-platform-native binaries.
     - autoconf               # [unix]
