@@ -34,3 +34,17 @@ test: native
 # that podman-on-NFS leaves behind; see ~/.config/opencode/AGENTS.md).
 skip_render:
   - .gitignore
+# Upload the built `.conda` packages (and the full build_artifacts/
+# tree) as downloadable GitHub Actions artifacts on each PR CI run.
+# This lets collaborators (e.g. upstream maintainers reviewing the
+# packaging work) install and try the package before the PR is merged,
+# without us needing to push to a personal anaconda.org channel.
+# Default artifact retention is 14 days per conda-forge convention;
+# bump via github_actions.artifact_retention_days if longer is needed.
+# Drop this `workflow_settings` block once the PR merges and packages
+# are available from conda-forge proper.
+workflow_settings:
+  store_build_artifacts:
+    - provider: github_actions
+      platform: [linux_64, osx_64, osx_arm64]
+      value: true
