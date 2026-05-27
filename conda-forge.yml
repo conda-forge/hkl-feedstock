@@ -48,3 +48,14 @@ workflow_settings:
     - provider: github_actions
       platform: [linux_64, osx_64, osx_arm64]
       value: true
+  # For osx_64/osx_arm64 cross-built via docker (per build_platform
+  # mapping above), the actual conda-build output goes to
+  # $GITHUB_WORKSPACE/build_artifacts (where run_docker_build.sh
+  # bind-mounts the docker container's /home/conda/feedstock_root).
+  # Smithy's default ~/miniforge3/conda-bld for osx assumes a NATIVE
+  # macOS runner; with our cross-build setup it does not exist on the
+  # runner, and the artifact-upload step bails with "conda-build
+  # directory does not exist". Override to match the linux_64 path.
+  build_workspace_dir:
+    - platform: [osx_64, osx_arm64]
+      value: build_artifacts
