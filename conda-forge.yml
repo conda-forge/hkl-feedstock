@@ -13,3 +13,8 @@ conda_build:
 # and lets `build-locally.py osx_arm64_` work on a Linux host.
 build_platform:
   osx_arm64: linux_64
+# Tell conda-smithy not to overwrite our locally-extended .gitignore on
+# rerender (the extension is to ignore /build_artifacts.stale.* trees
+# that podman-on-NFS leaves behind; see ~/.config/opencode/AGENTS.md).
+skip_render:
+  - .gitignore
