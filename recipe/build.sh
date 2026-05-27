@@ -40,10 +40,17 @@ fi
 
 printf "### ---> (%s) Disable/remove gtk-doc from source ... \n" $(date -Iseconds)
 touch gtk-doc.make  # OK if it is empty
-sed -e 's/^gtkdocize/#&/' -i autogen.sh
-sed '/^GTK_DOC.*/a m4_ifdef([GTK_DOC_USE_LIBTOOL], [], [AM_CONDITIONAL([GTK_DOC_USE_LIBTOOL], false)])' -i configure.ac
-sed -e 's/^GTK_DOC/dnl &/' -i configure.ac
-sed -r 's/--enable-gtk-doc//'  -i Makefile.am
+# Note: use `sed -i.bak -e ...` form for portability between GNU sed
+# (Linux) and BSD sed (macOS native build hosts). BSD sed requires a
+# backup-suffix argument immediately after -i and rejects the
+# `<expr> -i <file>` ordering accepted by GNU sed. Also use -E (POSIX
+# extended regex) instead of -r (GNU-only). The .bak files are inside
+# the build tree and discarded automatically.
+sed -i.bak -e 's/^gtkdocize/#&/' autogen.sh
+sed -i.bak -e '/^GTK_DOC.*/a\
+m4_ifdef([GTK_DOC_USE_LIBTOOL], [], [AM_CONDITIONAL([GTK_DOC_USE_LIBTOOL], false)])' configure.ac
+sed -i.bak -e 's/^GTK_DOC/dnl &/' configure.ac
+sed -i.bak -E 's/--enable-gtk-doc//' Makefile.am
 grep gtkdocize autogen.sh
 grep GTK_DOC configure.ac
 grep AM_DISTCHECK_CONFIGURE_FLAGS Makefile.am
@@ -54,7 +61,7 @@ grep AM_DISTCHECK_CONFIGURE_FLAGS Makefile.am
 # messages with the datatype99 sum-type library, which is disabled here.
 if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" == *darwin* ]]; then
     printf "### ---> (%s) Stripping GCC-only -ftrack-macro-expansion=0 on macOS ... \n" $(date -Iseconds)
-    sed -i 's/-ftrack-macro-expansion=0//g' configure.ac
+    sed -i.bak -e 's/-ftrack-macro-expansion=0//g' configure.ac
     grep -n 'track-macro' configure.ac || echo "  (flag removed)"
 fi
 
@@ -214,7 +221,7 @@ if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
             printf "### ---> (%s) Disabling -Wl,--no-as-needed in g-ir-scanner for macOS target ... \n" $(date -Iseconds)
             # Replace both occurrences of the guard so neither branch
             # appends the flag. Use a sed expression that is idempotent.
-            sed -i "s|if sys.platform != 'darwin':|if False:  # hkl-feedstock cross-compile workaround: was 'sys.platform != darwin'|g" "${CCOMPILER_PY}"
+            sed -i.bak -e "s|if sys.platform != 'darwin':|if False:  # hkl-feedstock cross-compile workaround: was 'sys.platform != darwin'|g" "${CCOMPILER_PY}"
             # Verify the patch took effect (and that --no-as-needed is
             # no longer reachable via the now-False branch).
             if grep -nF "if sys.platform != 'darwin'" "${CCOMPILER_PY}"; then
