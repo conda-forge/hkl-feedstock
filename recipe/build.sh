@@ -190,6 +190,42 @@ if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
     # replay-mode for g-ir-scanner.
     export GI_CROSS_LAUNCHER="${BUILD_PREFIX}/libexec/gi-cross-launcher-load.sh"
     printf "### ---> Native pre-build done; cross build will use GI_CROSS_LAUNCHER=%s\n" "${GI_CROSS_LAUNCHER}"
+
+    # Patch the build-prefix g-ir-scanner to drop "-Wl,--no-as-needed"
+    # when building the probe binary, for macOS cross-targets only.
+    #
+    # gobject-introspection's giscanner/ccompiler.py guards this flag
+    # with `if sys.platform != 'darwin':` -- but sys.platform is the
+    # *scanner's* platform (Linux, the build host), not the *target*'s.
+    # When cross-compiling Linux -> macOS, the scanner is run on Linux
+    # and so adds --no-as-needed, which Apple ld then rejects:
+    #
+    #     ld: unknown option: --no-as-needed
+    #     x86_64-apple-darwin13.4: error: linker command failed
+    #
+    # Reported upstream; until that is fixed we patch the installed
+    # ccompiler.py in-place to disable the flag-add. The native pre-build
+    # above ran with the flag *intact* (Linux ld needs it for the ldd-
+    # based symbol introspection), so this patch only affects the cross
+    # build's scanner invocation.
+    if [[ "${HOST:-}" == *darwin* ]]; then
+        CCOMPILER_PY="${BUILD_PREFIX}/lib/gobject-introspection/giscanner/ccompiler.py"
+        if [ -f "${CCOMPILER_PY}" ]; then
+            printf "### ---> (%s) Disabling -Wl,--no-as-needed in g-ir-scanner for macOS target ... \n" $(date -Iseconds)
+            # Replace both occurrences of the guard so neither branch
+            # appends the flag. Use a sed expression that is idempotent.
+            sed -i "s|if sys.platform != 'darwin':|if False:  # hkl-feedstock cross-compile workaround: was 'sys.platform != darwin'|g" "${CCOMPILER_PY}"
+            # Verify the patch took effect (and that --no-as-needed is
+            # no longer reachable via the now-False branch).
+            if grep -nF "if sys.platform != 'darwin'" "${CCOMPILER_PY}"; then
+                echo "ERROR: ccompiler.py patch did not apply -- guard still present" >&2
+                exit 1
+            fi
+            grep -n 'no-as-needed' "${CCOMPILER_PY}" || echo "  (already had no occurrences -- ok)"
+        else
+            echo "WARNING: ${CCOMPILER_PY} not found; --no-as-needed workaround skipped" >&2
+        fi
+    fi
 fi
 
 printf "### ---> (%s) Running configure ... \n" $(date -Iseconds)
@@ -254,7 +290,10 @@ make install "${make_extra[@]}"
 #   from the caller), so the rewrite is not known to be needed there; we
 #   skip it on macOS and let run_test.py's import test verify behavior.
 # -----------------------------------------------------------------------------
-if [[ "$(uname -s)" == "Linux" ]]; then
+# Gate on the *target* platform, not the build host: on cross-builds
+# `uname -s` would return Linux even when targeting macOS, taking the
+# wrong branch.
+if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" != *darwin* ]]; then
     printf "### ---> (%s) Rewriting Hkl typelib with absolute libhkl path ... \n" $(date -Iseconds)
     GIR_FILE="${PREFIX}/share/gir-1.0/Hkl-5.0.gir"
     TYPELIB_FILE="${PREFIX}/lib/girepository-1.0/Hkl-5.0.typelib"
@@ -269,8 +308,8 @@ if [[ "$(uname -s)" == "Linux" ]]; then
     printf "### ---> typelib now references: "
     strings "${TYPELIB_FILE}" | grep -E 'libhkl\.so' | head -1
 else
-    # On non-Linux (macOS): just verify the expected install layout.
-    printf "### ---> (%s) Non-Linux platform; skipping typelib absolute-path rewrite. \n" $(date -Iseconds)
+    # macOS target: just verify the expected install layout.
+    printf "### ---> (%s) macOS target; skipping typelib absolute-path rewrite. \n" $(date -Iseconds)
     LIBHKL_DYLIB="${PREFIX}/lib/libhkl.5.dylib"
     TYPELIB_FILE="${PREFIX}/lib/girepository-1.0/Hkl-5.0.typelib"
     if [ ! -f "${LIBHKL_DYLIB}" ] || [ ! -f "${TYPELIB_FILE}" ]; then
