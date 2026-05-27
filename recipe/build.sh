@@ -6,6 +6,23 @@ printf "### \n"
 printf "### (%s) start of build.sh \n" $(date -Iseconds)
 printf "###  \n"
 
+# Detect Windows target up front; the build flow there is simpler:
+#   - autotools_clang_conda (sourced via bld.bat) provides bash +
+#     autoconf/automake/libtool/make/sed + clang + lld, configured to
+#     produce MSVC-compatible binaries
+#   - no rpath, no Mach-O linker flags, no native-pre-build dance
+#   - introspection is dropped entirely on Windows for now (GI cross-
+#     build machinery is not yet adapted to MinGW/clang-on-windows)
+IS_WIN=0
+case "${target_platform:-}" in
+    win-*) IS_WIN=1 ;;
+esac
+if [ "$IS_WIN" = 1 ]; then
+    printf "### ---> (%s) Windows target detected; using simplified build flow.\n" $(date -Iseconds)
+fi
+
+if [ "$IS_WIN" = 0 ]; then
+
 # Cross-compilation pkg-config plumbing.
 #
 # On a cross-build, both ${BUILD_PREFIX}/bin and ${PREFIX}/bin contain a
@@ -21,6 +38,8 @@ printf "###  \n"
 export PKG_CONFIG="${BUILD_PREFIX}/bin/pkg-config"
 export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig:${BUILD_PREFIX}/lib/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
 export PKG_CONFIG_PATH_FOR_BUILD="${BUILD_PREFIX}/lib/pkgconfig"
+
+fi  # IS_WIN==0
 
 # macOS-specific CFLAGS additions.
 #
@@ -75,13 +94,19 @@ export ACLOCAL_PATH="${BUILD_PREFIX}/share/aclocal${ACLOCAL_PATH:+:${ACLOCAL_PAT
 printf "### ---> ACLOCAL_PATH=%s\n" "${ACLOCAL_PATH}"
 bash ./autogen.sh
 
-ORIGIN_RPATH='\$ORIGIN/../lib'
-RPATH_FLAG="-Wl,-rpath,${ORIGIN_RPATH}"
-
-export LDFLAGS="${LDFLAGS:-} ${RPATH_FLAG}"
+if [ "$IS_WIN" = 0 ]; then
+    # Make installed binaries find their sibling libraries via $ORIGIN.
+    # Not applicable on Windows (no rpath concept; DLL search uses PATH
+    # / SxS / app-local-side-by-side instead).
+    ORIGIN_RPATH='\$ORIGIN/../lib'
+    RPATH_FLAG="-Wl,-rpath,${ORIGIN_RPATH}"
+    export LDFLAGS="${LDFLAGS:-} ${RPATH_FLAG}"
+fi
 export CPPFLAGS="${CPPFLAGS:-} -I${PREFIX}/include"
 export CFLAGS="${CFLAGS:-}"
-export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${BUILD_PREFIX}/lib/pkgconfig"
+if [ "$IS_WIN" = 0 ]; then
+    export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${BUILD_PREFIX}/lib/pkgconfig"
+fi
 
 # configure.ac uses AX_PATH_GSL from autoconf-archive to discover GSL,
 # but conda-forge's autoconf-archive 2021.02.19 does not ship that
@@ -98,6 +123,13 @@ export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${BUILD_PREFIX}/lib/pkgconfig"
 # which AC_SUBSTs both vars; when AX_PATH_GSL fails to expand, the vars
 # are still substituted by autoconf as empty unless we pre-set them in
 # the environment (and they're then preserved by `./configure`).
+if [ "$IS_WIN" = 1 ]; then
+    # On Windows, $PKG_CONFIG was not exported above; use the one that
+    # autotools_clang_conda has put on PATH (it lives in
+    # %BUILD_PREFIX%\Library\bin\pkg-config but bash's PATH translation
+    # makes plain `pkg-config` find it).
+    PKG_CONFIG=pkg-config
+fi
 export GSL_CFLAGS="$(${PKG_CONFIG} --cflags gsl)"
 export GSL_LIBS="$(${PKG_CONFIG} --libs gsl)"
 printf "### ---> GSL_CFLAGS=%s\n" "${GSL_CFLAGS}"
@@ -236,13 +268,23 @@ if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
 fi
 
 printf "### ---> (%s) Running configure ... \n" $(date -Iseconds)
+# Drop --enable-introspection on Windows: the GObject-Introspection
+# cross-build machinery in this recipe is not yet adapted to clang-on-
+# windows (g-ir-scanner/Makefile.introspection invokes libtool with
+# Unix paths and assumes ELF/Mach-O). For win-64 we ship the libhkl
+# DLL + headers + import lib + pkg-config only; introspection support
+# can be layered in once the basic Windows build is verified.
+INTROSPECTION_FLAG="--enable-introspection=yes"
+if [ "$IS_WIN" = 1 ]; then
+    INTROSPECTION_FLAG="--enable-introspection=no"
+fi
 ./configure \
   --prefix="${PREFIX}" \
   --disable-static \
   --disable-binoculars \
   --disable-gui \
   --disable-hkl-doc \
-  --enable-introspection=yes \
+  ${INTROSPECTION_FLAG} \
   GSL_CFLAGS="${GSL_CFLAGS}" \
   GSL_LIBS="${GSL_LIBS}" \
   LDFLAGS="${LDFLAGS}"
@@ -268,10 +310,15 @@ printf "### ---> (%s) Running make ... \n" $(date -Iseconds)
 # GI_CROSS_LAUNCHER (set earlier when CONDA_BUILD_CROSS_COMPILATION=1)
 # tells the scanner to replay the saved native-build probe output instead
 # of trying to run a target binary.
-make_extra=(
-    "INTROSPECTION_SCANNER=${BUILD_PREFIX}/bin/g-ir-scanner"
-    "INTROSPECTION_COMPILER=${BUILD_PREFIX}/bin/g-ir-compiler"
-)
+make_extra=()
+if [ "$IS_WIN" = 0 ]; then
+    # Always use the build-prefix introspection tools rather than
+    # host-prefix ones (Python-ABI mismatch via `env python3` on cross-
+    # build PATH; macOS-vs-Linux scanner targeting issues). Not needed
+    # on Windows where introspection is disabled.
+    make_extra+=("INTROSPECTION_SCANNER=${BUILD_PREFIX}/bin/g-ir-scanner")
+    make_extra+=("INTROSPECTION_COMPILER=${BUILD_PREFIX}/bin/g-ir-compiler")
+fi
 # Pass _XOPEN_SOURCE / _DARWIN_C_SOURCE to ccan's configurator probes via
 # CCAN_CFLAGS (the make var referenced by hkl/ccan/Makefile.am's
 # `configurator ... $(CCAN_CFLAGS)` invocation). Without this, the
@@ -320,10 +367,19 @@ make install "${make_extra[@]}"
 #   from the caller), so the rewrite is not known to be needed there; we
 #   skip it on macOS and let run_test.py's import test verify behavior.
 # -----------------------------------------------------------------------------
+# Windows: no introspection was built, so no typelib to rewrite, and
+# no shared-library SONAME concept. Just verify the DLL is installed.
+if [ "$IS_WIN" = 1 ]; then
+    printf "### ---> (%s) Windows target; skipping typelib block. \n" $(date -Iseconds)
+    # autotools+libtool's MSVC-compat output names: hkl-5.dll + hkl.lib
+    # (import lib) under $LIBRARY_BIN / $LIBRARY_LIB respectively.
+    # Check that *something* libhkl-shaped landed in the install.
+    ls -l "${PREFIX}"/Library/bin/*hkl*.dll "${PREFIX}"/Library/lib/*hkl*.lib 2>&1 || true
+    ls -l "${PREFIX}"/Library/lib/pkgconfig/hkl.pc 2>&1 || true
 # Gate on the *target* platform, not the build host: on cross-builds
 # `uname -s` would return Linux even when targeting macOS, taking the
 # wrong branch.
-if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" != *darwin* ]]; then
+elif [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" != *darwin* ]]; then
     printf "### ---> (%s) Rewriting Hkl typelib with absolute libhkl path ... \n" $(date -Iseconds)
     GIR_FILE="${PREFIX}/share/gir-1.0/Hkl-5.0.gir"
     TYPELIB_FILE="${PREFIX}/lib/girepository-1.0/Hkl-5.0.typelib"

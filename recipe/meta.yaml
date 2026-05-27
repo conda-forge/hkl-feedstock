@@ -22,53 +22,63 @@ source:
     # See patches/README.md for the rationale and upstream status of each patch.
     - patches/0001-ccan-configurator-build-host-binary.patch
     - patches/0002-coroutine-bump-min-stksz-for-macos.patch
+    - patches/0003-make-api2-optional-on-no-ucontext.patch
 
 build:
   number: 0
-  skip: True  # [py<39 or win]
+  skip: True  # [py<39]
 
 requirements:
   build:
     - {{ compiler('c') }}
     - {{ stdlib('c') }}
+    # On Windows, autotools_clang_conda bundles MSYS2 + clang + the
+    # full autotools chain (autoconf/automake/libtool/make/m4/bash/sed
+    # etc.) configured to produce MSVC-compatible binaries from
+    # autoconf/automake recipes. It replaces the unix-only pieces below.
+    - autotools_clang_conda  # [win]
     # Autotools toolchain runs on the build host; must be in `build:`,
     # not `host:`, so cross-builds get the build-platform-native binaries.
-    - autoconf
-    - autoconf-archive
-    - automake
-    - libtool
-    - m4
-    - git
-    - make
-    - pkg-config
+    - autoconf               # [unix]
+    - autoconf-archive       # [unix]
+    - automake               # [unix]
+    - libtool                # [unix]
+    - m4                     # [unix]
+    - git                    # [unix]
+    - make                   # [unix]
+    - pkg-config             # [unix]
     # gobject-introspection ships introspection.m4 (used by
     # GOBJECT_INTROSPECTION_CHECK in configure.ac at autoreconf time) and
     # the g-ir-scanner / g-ir-compiler binaries; all run build-side.
-    - gobject-introspection
+    # Skipped on Windows for now: the introspection cross-build
+    # machinery in this recipe is not yet adapted to MinGW/clang-on-win,
+    # so we drop --enable-introspection on Windows and ship only the
+    # libhkl DLL + headers + import lib + pkg-config file.
+    - gobject-introspection  # [unix]
     # When cross-compiling, the build host also needs glib's pkg-config /
     # tools so AM_PATH_GLIB_2_0 and g-ir-scanner can resolve glib.
-    - glib  # [build_platform != target_platform]
+    - glib  # [unix and build_platform != target_platform]
     # When cross-compiling, build.sh performs a native pre-build of the
     # package (so g-ir-scanner can run a native probe binary). That
     # native build needs the same C-library deps in the build prefix:
-    - gsl  # [build_platform != target_platform]
-    - libcblas  # [build_platform != target_platform]
+    - gsl  # [unix and build_platform != target_platform]
+    - libcblas  # [unix and build_platform != target_platform]
   host:
     - conda-verify
     - glib
     - glib-tools
-    - gobject-introspection
+    - gobject-introspection  # [unix]
     - gsl
     - libcblas
     - libglib
-    # macOS libc lacks GNU libintl that gettext-using autotools projects
-    # probe for; conda-forge ships libintl-devel as the shim.
+    # macOS libc lacks GNU libintl; conda-forge ships libintl-devel as
+    # the shim.  Same applies on Windows (MSVC runtime).
     - libintl-devel  # [not linux]
     - zlib
   run:
-    - gobject-introspection
+    - gobject-introspection  # [unix]
     - libglib
-    - pygobject
+    - pygobject              # [unix]
 
 test:
   requires:
@@ -77,7 +87,10 @@ test:
     - python <3.12
   downstreams:
     # - hklpy  # FIXME: fails due to missing tiled package
-    - hklpy2  # does not fail
+    # hklpy2's hkl_soleil backend uses gi.repository.Hkl which we do
+    # not currently ship on Windows; restrict the downstream test to
+    # unix until win-64 grows introspection support.
+    - hklpy2  # [unix]
 
 about:
   home: http://repo.or.cz/w/hkl.git

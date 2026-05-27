@@ -4,6 +4,22 @@ import os
 import pathlib
 import sys
 
+# On Windows the recipe does not currently build GObject-Introspection
+# (see recipe/build.sh's IS_WIN branch). Skip the gi-based tests and
+# just verify the DLL + import lib + pkg-config landed in the install.
+if sys.platform == "win32":
+    prefix = pathlib.Path(os.environ["PREFIX"])
+    bin_dir = prefix / "Library" / "bin"
+    lib_dir = prefix / "Library" / "lib"
+    pkgconfig = lib_dir / "pkgconfig" / "hkl.pc"
+    dlls = list(bin_dir.glob("*hkl*.dll"))
+    imp_libs = list(lib_dir.glob("*hkl*.lib"))
+    assert dlls, f"no hkl DLL found in {bin_dir}"
+    assert imp_libs, f"no hkl import library found in {lib_dir}"
+    assert pkgconfig.is_file(), f"hkl.pc missing at {pkgconfig}"
+    print(f"Windows install layout OK: dlls={dlls!r} libs={imp_libs!r}")
+    sys.exit(0)
+
 # Regression guard for the LD_LIBRARY_PATH workaround in hklpy2's FAQ.
 # See: https://github.com/bluesky/hklpy2/issues/69   (original report)
 #      https://github.com/bluesky/hklpy2/issues/413  (tracking the fix)
