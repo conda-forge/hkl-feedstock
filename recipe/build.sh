@@ -243,17 +243,28 @@ printf "### ---> (%s) Running configure ... \n" $(date -Iseconds)
 # printf "### ---> DIR : %s\n" $(ls)
 
 printf "### ---> (%s) Running make ... \n" $(date -Iseconds)
-# When cross-compiling, override INTROSPECTION_SCANNER / _COMPILER to use
-# the build-prefix binaries (Linux-native, modern Python) instead of the
-# host-prefix ones (target Python, often unable to import because of
-# distutils/setuptools differences). GI_CROSS_LAUNCHER (set earlier when
-# CONDA_BUILD_CROSS_COMPILATION=1) tells the scanner to replay the saved
-# native-build probe output instead of trying to run a target binary.
-make_extra=()
-if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
-    make_extra+=("INTROSPECTION_SCANNER=${BUILD_PREFIX}/bin/g-ir-scanner")
-    make_extra+=("INTROSPECTION_COMPILER=${BUILD_PREFIX}/bin/g-ir-compiler")
-fi
+# Always override INTROSPECTION_SCANNER / _COMPILER to use the build-prefix
+# binaries rather than the host-prefix ones. Two reasons:
+#
+#   1. (Cross-builds) On Linux -> macOS cross-builds, the host-prefix
+#      g-ir-scanner targets the wrong arch/OS and would fail.
+#
+#   2. (Native linux-64) The host-prefix g-ir-scanner script has
+#      `#!/usr/bin/env python3`. conda-build's cross-build PATH puts
+#      $BUILD_PREFIX/bin first, so `env python3` resolves to the
+#      build-env Python (e.g. 3.14) while the host-env's _giscanner
+#      C extension was built for the host-env Python (e.g. 3.11).
+#      Python version mismatch -> ModuleNotFoundError: giscanner._giscanner.
+#      Using the build-prefix scanner aligns the Python interpreter
+#      with the C extension's ABI tag.
+#
+# GI_CROSS_LAUNCHER (set earlier when CONDA_BUILD_CROSS_COMPILATION=1)
+# tells the scanner to replay the saved native-build probe output instead
+# of trying to run a target binary.
+make_extra=(
+    "INTROSPECTION_SCANNER=${BUILD_PREFIX}/bin/g-ir-scanner"
+    "INTROSPECTION_COMPILER=${BUILD_PREFIX}/bin/g-ir-compiler"
+)
 make -j "${CPU_COUNT:-1}" "${make_extra[@]}"
 
 printf "### ---> (%s) Running make install ... \n" $(date -Iseconds)
