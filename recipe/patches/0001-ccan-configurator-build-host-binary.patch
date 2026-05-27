@@ -1,0 +1,78 @@
+From: conda-forge hkl-feedstock maintainers
+Date: 2026-05-26
+Subject: [ccan] Make configurator cross-compile-aware
+
+`hkl/ccan/configurator.c` (vendored from ccan) is a build-time helper
+that probes a compiler's feature set (typeof, __attribute__ variants,
+HAVE_MMAP, HAVE_UCONTEXT, ...) and emits `hkl/ccan/ccan_config.h` for
+the rest of the ccan code to gate on.
+
+For each probe, configurator compiles a small program and (for
+EXECUTE/INSIDE_MAIN style probes) RUNS the resulting binary. In a
+cross-compilation environment (e.g. conda-forge building osx-64
+packages on a linux-64 host) two things go wrong:
+
+1. The `configurator` binary itself is built by automake's
+   `noinst_PROGRAMS=configurator` machinery, which uses $(CC) -- the
+   target cross-compiler. The resulting Mach-O binary cannot be
+   exec'd on the build host:
+
+       ./configurator x86_64-apple-darwin13.4.0-clang > ccan_config.h.tmp
+       /bin/sh: line 1: ./configurator: cannot execute binary file:
+                                        Exec format error
+
+2. Even after fixing (1), the probes compile target-arch binaries
+   that likewise cannot be exec'd on the build host:
+
+       ./configurator: Test for HAVE_ALIGNOF failed with 32256:
+       sh: line 1: ./configurator.out: cannot execute binary file:
+                                       Exec format error
+
+Fixes:
+
+* Compile `configurator` itself with $(CC_FOR_BUILD), falling back
+  to $(CC) when CC_FOR_BUILD is unset (native builds).
+* Pass `--configurator-cc=$(CC_FOR_BUILD)` to the running
+  configurator so the probe programs are also compiled (and
+  therefore runnable) on the build host. ccan's configurator already
+  supports this flag.
+
+Caveat for upstream review:
+  The probes that depend on the *target* OS (HAVE_UCONTEXT,
+  HAVE_MMAP, HAVE_GETPAGESIZE, ...) will now reflect the build-host
+  OS, not the target. For Linux->macOS cross-builds these all happen
+  to agree (both have ucontext, mmap, getpagesize), so the result
+  is correct in practice. For Linux->Windows cross-builds this
+  would NOT be correct, and a proper fix there will need pre-canned
+  answers via `--var-file=` or a cross-compile launcher. This patch
+  is sufficient for macOS and is offered as a stepping stone toward
+  full cross-compile support.
+
+Native (non-cross) builds are unaffected: with CC_FOR_BUILD unset,
+both the configurator build rule and the --configurator-cc= argument
+expand to use $(CC), identical to the prior behavior.
+
+--- a/hkl/ccan/Makefile.am
++++ b/hkl/ccan/Makefile.am
+@@ -1,9 +1,19 @@
+ AM_CFLAGS=-I$(top_srcdir)
+ 
+-noinst_PROGRAMS=configurator
++# `configurator` is a build-time helper: it runs on the build host and
++# probes the target compiler's features. It must be compiled with the
++# build-host compiler so it can be exec'd on the build host even when
++# cross-compiling. Fall back to $(CC) when CC_FOR_BUILD is unset
++# (native builds), preserving the original behavior in that case.
++CC_FOR_BUILD ?= $(CC)
++configurator: configurator.c
++	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) -I$(top_srcdir) -o $@ $<
+ BUILT_SOURCES=ccan_config.h
++# --configurator-cc tells configurator to also compile its probe
++# programs with CC_FOR_BUILD, so probe binaries are runnable on the
++# build host. See recipe/patches/README.md for caveats.
+ ccan_config.h: configurator
+-	$(builddir)/configurator $(CC) $(CCAN_CFLAGS) > $@.tmp && mv $@.tmp $@
++	$(builddir)/configurator --configurator-cc=$(CC_FOR_BUILD) $(CC) $(CCAN_CFLAGS) > $@.tmp && mv $@.tmp $@
+ noinst_LTLIBRARIES=libccan.la
+ libccan_la_SOURCES = \
+ 	ccan_config.h \

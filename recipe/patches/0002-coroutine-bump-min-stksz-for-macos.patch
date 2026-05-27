@@ -1,0 +1,45 @@
+From: conda-forge hkl-feedstock maintainers
+Date: 2026-05-26
+Subject: [ccan/coroutine] Bump COROUTINE_MIN_STKSZ to satisfy macOS 11+ MINSIGSTKSZ
+
+`hkl/ccan/coroutine/coroutine.c` contains a BUILD_ASSERT that
+COROUTINE_MIN_STKSZ (defined in coroutine.h as 2048) is at least as
+large as the platform's MINSIGSTKSZ:
+
+    coroutine.c:63:    BUILD_ASSERT(COROUTINE_MIN_STKSZ >= MINSIGSTKSZ);
+
+On macOS 11 SDK, <sys/signal.h> defines MINSIGSTKSZ=32768 (32 KiB),
+while COROUTINE_MIN_STKSZ remains 2048, so the build assert fails:
+
+    coroutine/coroutine.c:63:2: error: array size is negative
+       63 |    BUILD_ASSERT(COROUTINE_MIN_STKSZ >= MINSIGSTKSZ);
+
+The doc comment for COROUTINE_MIN_STKSZ explicitly promises:
+"On systems with MINSTKSZ, guaranteed to be at least as large as
+MINSTKSZ." -- i.e. the literal `2048` is a bug, not a deliberate
+contract. Larger stacks are always safe; this only consumes slightly
+more memory per coroutine instance.
+
+Fix: bump the literal to 32768. This matches the actual macOS 11
+MINSIGSTKSZ and is still well below typical stack-size guidance for
+process threads, so impact is negligible.
+
+A more general upstream fix would compute the value via #if defined
+gates against the headers, but this is sufficient for the conda-forge
+target platforms.
+
+--- a/hkl/ccan/coroutine/coroutine.h
++++ b/hkl/ccan/coroutine/coroutine.h
+@@ -50,7 +50,11 @@
+  * overhead).  On systems with MINSTKSZ, guaranteed to be at least as
+  * large as MINSTKSZ.
+  */
+-#define COROUTINE_MIN_STKSZ		2048
++/* Bumped from 2048 to 32768 to satisfy macOS 11+ MINSIGSTKSZ
++ * (sys/signal.h on macOS 11 SDK defines MINSIGSTKSZ=32768).
++ * BUILD_ASSERT in coroutine.c checks COROUTINE_MIN_STKSZ >= MINSIGSTKSZ.
++ * Larger stack size is always safe; only uses slightly more memory per coroutine. */
++#define COROUTINE_MIN_STKSZ		32768
+ 
+ /**
+  * COROUTINE_STACK_MAGIC_BUF - Magic number for coroutine stacks in a user

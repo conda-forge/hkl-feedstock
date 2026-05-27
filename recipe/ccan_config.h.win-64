@@ -1,0 +1,115 @@
+/* Hand-curated ccan_config.h for win-64.
+ *
+ * The ccan configurator (hkl/ccan/configurator.c) cannot build on
+ * Windows because it #includes <unistd.h>, which clang-on-windows
+ * (autotools_clang_conda toolchain) does not provide.  Rather than
+ * porting configurator.c to Windows (it would lose its probe-by-
+ * compile-and-run design that already does not work for cross-builds),
+ * we ship a pre-computed ccan_config.h with conservative answers for
+ * a modern clang-on-Windows-MSVC environment.
+ *
+ * The ccan modules actually used by libhkl (alignof, array_size,
+ * build_assert, check_type, compiler, container_of, cppmagic, darray,
+ * list, ptrint, str, typesafe_cb) only consult the HAVE_TYPEOF,
+ * HAVE_STATEMENT_EXPR, HAVE_BUILTIN_*, and HAVE_ATTRIBUTE_* macros.
+ * Clang supports all of those; setting them to 1 is correct.
+ *
+ * Modules that hkl-feedstock patch 0003 disables on no-ucontext builds
+ * (coroutine, generator, plus the api2/ subdir) are not compiled into
+ * libhkl on Windows, so HAVE_UCONTEXT=0 and the other POSIX-only
+ * probes never matter.
+ *
+ * The build.sh on Windows copies this file in place of the would-be
+ * configurator-generated ccan_config.h.
+ */
+#ifndef CCAN_CONFIG_H
+#define CCAN_CONFIG_H
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#define CCAN_COMPILER "clang"
+#define CCAN_CFLAGS ""
+#define CCAN_OUTPUT_EXE_CFLAG "-o"
+
+#define HAVE_CCAN 1
+
+/* Compiler-feature probes -- clang supports all of these on Windows. */
+#define HAVE_ALIGNOF 1
+#define HAVE_ATTRIBUTE_COLD 1
+#define HAVE_ATTRIBUTE_CONST 1
+#define HAVE_ATTRIBUTE_DEPRECATED 1
+#define HAVE_ATTRIBUTE_NONNULL 1
+#define HAVE_ATTRIBUTE_RETURNS_NONNULL 1
+#define HAVE_ATTRIBUTE_PURE 1
+#define HAVE_ATTRIBUTE_MAY_ALIAS 1
+#define HAVE_ATTRIBUTE_NORETURN 1
+#define HAVE_ATTRIBUTE_PRINTF 1
+#define HAVE_ATTRIBUTE_UNUSED 1
+#define HAVE_ATTRIBUTE_USED 1
+#define HAVE_BSWAP_64 1
+#define HAVE_BUILTIN_CHOOSE_EXPR 1
+#define HAVE_BUILTIN_CLZ 1
+#define HAVE_BUILTIN_CLZL 1
+#define HAVE_BUILTIN_CLZLL 1
+#define HAVE_BUILTIN_CTZ 1
+#define HAVE_BUILTIN_CTZL 1
+#define HAVE_BUILTIN_CTZLL 1
+#define HAVE_BUILTIN_CONSTANT_P 1
+#define HAVE_BUILTIN_EXPECT 1
+#define HAVE_BUILTIN_FFS 1
+#define HAVE_BUILTIN_FFSL 1
+#define HAVE_BUILTIN_FFSLL 1
+#define HAVE_BUILTIN_POPCOUNT 1
+#define HAVE_BUILTIN_POPCOUNTL 1
+#define HAVE_BUILTIN_POPCOUNTLL 1
+#define HAVE_BUILTIN_TYPES_COMPATIBLE_P 1
+#define HAVE_BUILTIN_CPU_SUPPORTS 1
+#define HAVE_COMPOUND_LITERALS 1
+#define HAVE_FLEXIBLE_ARRAY_MEMBER 1
+#define HAVE_FOR_LOOP_DECLARATION 1
+#define HAVE_STATEMENT_EXPR 1
+#define HAVE_TYPEOF 1
+#define HAVE_WARN_UNUSED_RESULT 1
+
+/* Endianness -- x86_64 is little-endian. */
+#define HAVE_LITTLE_ENDIAN 1
+#define HAVE_BIG_ENDIAN 0
+#define HAVE_STACK_GROWS_UPWARDS 0
+#define HAVE_UNALIGNED_ACCESS 1
+
+/* POSIX-y stuff -- not available with MSVC headers. */
+#define HAVE_32BIT_OFF_T 0
+#define HAVE_ASPRINTF 0
+#define HAVE_BACKTRACE 0
+#define HAVE_BYTESWAP_H 0
+#define HAVE_CLOCK_GETTIME 0
+#define HAVE_CLOCK_GETTIME_IN_LIBRT 0
+#define HAVE_ERR_H 0
+#define HAVE_FCHDIR 0
+#define HAVE_FILE_OFFSET_BITS 0
+#define HAVE_GETPAGESIZE 0
+#define HAVE_ISBLANK 1
+#define HAVE_MEMMEM 0
+#define HAVE_MEMRCHR 0
+#define HAVE_MMAP 0
+#define HAVE_OPENMP 0
+#define HAVE_PROC_SELF_MAPS 0
+#define HAVE_QSORT_R_PRIVATE_LAST 0
+#define HAVE_SECTION_START_STOP 0
+#define HAVE_STRUCT_TIMESPEC 1
+#define HAVE_SYS_FILIO_H 0
+#define HAVE_SYS_TERMIOS_H 0
+#define HAVE_SYS_UNISTD_H 0
+#define HAVE_UCONTEXT 0
+#define HAVE_POINTER_SAFE_MAKECONTEXT 0
+#define HAVE_UTIME 0
+#define HAVE_VALGRIND_MEMCHECK_H 0
+#define HAVE_ICCARM_INTRINSICS 0
+#define HAVE_CLOSEFROM 0
+#define HAVE_F_CLOSEM 0
+#define HAVE_NR_CLOSE_RANGE 0
+#define HAVE_F_MAXFD 0
+
+#endif /* CCAN_CONFIG_H */

@@ -6,3 +6,56 @@ github:
   tooling_branch_name: main
 conda_build:
   pkg_format: '2'
+# Cross-build BOTH osx targets from linux-64. We must force osx_64
+# here too (conda-forge's default is to run osx_64 natively on macOS
+# Azure runners). When osx_64 runs natively, ccan's HAVE_UCONTEXT
+# probe in hkl/ccan/configurator runs on macOS and correctly returns
+# 0 (macOS 11+ deprecated the ucontext routines and the probe binary
+# aborts -- in part because static `char stack[16384]` < MINSIGSTKSZ
+# (32768) on macOS 11+, which is exactly the gap our recipe
+# patches/0002 closes for the *library* build but not for the
+# configurator probe itself). The cascade is:
+#     HAVE_UCONTEXT=0 -> COROUTINE_AVAILABLE=0 ->
+#     hkl/ccan/generator/generator.h:23: #error Generators require coroutines
+# Cross-building from linux_64 sidesteps the probe failure because
+# our patches/0001 makes configurator run with --configurator-cc set
+# to the build-host (Linux) compiler, where ucontext works.
+build_platform:
+  osx_64: linux_64
+  osx_arm64: linux_64
+# Cross-built osx packages cannot be tested on the Linux build host:
+# the test env needs __osx >=11.0 (virtual package), which Linux does
+# not provide. `test: native` tells conda-build to skip the test phase
+# whenever the target platform is not the build host's platform. Real
+# macOS testing happens later when the package is installed on a Mac.
+test: native
+# Tell conda-smithy not to overwrite our locally-extended .gitignore on
+# rerender (the extension is to ignore /build_artifacts.stale.* trees
+# that podman-on-NFS leaves behind; see ~/.config/opencode/AGENTS.md).
+skip_render:
+  - .gitignore
+# Upload the built `.conda` packages (and the full build_artifacts/
+# tree) as downloadable GitHub Actions artifacts on each PR CI run.
+# This lets collaborators (e.g. upstream maintainers reviewing the
+# packaging work) install and try the package before the PR is merged,
+# without us needing to push to a personal anaconda.org channel.
+# Default artifact retention is 14 days per conda-forge convention;
+# bump via github_actions.artifact_retention_days if longer is needed.
+# Drop this `workflow_settings` block once the PR merges and packages
+# are available from conda-forge proper.
+workflow_settings:
+  store_build_artifacts:
+    - provider: github_actions
+      platform: [linux_64, osx_64, osx_arm64]
+      value: true
+  # For osx_64/osx_arm64 cross-built via docker (per build_platform
+  # mapping above), the actual conda-build output goes to
+  # $GITHUB_WORKSPACE/build_artifacts (where run_docker_build.sh
+  # bind-mounts the docker container's /home/conda/feedstock_root).
+  # Smithy's default ~/miniforge3/conda-bld for osx assumes a NATIVE
+  # macOS runner; with our cross-build setup it does not exist on the
+  # runner, and the artifact-upload step bails with "conda-build
+  # directory does not exist". Override to match the linux_64 path.
+  build_workspace_dir:
+    - platform: [osx_64, osx_arm64]
+      value: build_artifacts

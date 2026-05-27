@@ -22,6 +22,13 @@
 !/build_artifacts/**
 /build_artifacts
 
+# Stale build_artifacts trees from prior podman-on-NFS workarounds.
+# These appear when we `mv build_artifacts build_artifacts.stale.<TS>`
+# because `podman unshare rm -rf build_artifacts/` fails on NFS.
+# See ~/.config/opencode/AGENTS.md for context.
+# (Preserved across smithy rerenders via skip_render in conda-forge.yml.)
+/build_artifacts.stale.*
+
 *.pyc
 
 # Rattler-build's artifacts are in `output` when not specifying anything.
