@@ -33,10 +33,17 @@ requirements:
     - {{ compiler('c') }}
     - {{ stdlib('c') }}
     # On Windows, autotools_clang_conda bundles MSYS2 + clang + the
-    # full autotools chain (autoconf/automake/libtool/make/m4/bash/sed
-    # etc.) configured to produce MSVC-compatible binaries from
-    # autoconf/automake recipes. It replaces the unix-only pieces below.
+    # full autotools chain (m2-autoconf/automake/libtool/make/m4/bash/
+    # sed etc.) configured to produce MSVC-compatible binaries from
+    # autoconf/automake recipes. Note: m2-autoconf is 2.71; build.sh
+    # patches configure.ac's AC_PREREQ down from 2.72 on Windows
+    # because the new-in-2.72 features hkl uses are not actually used.
     - autotools_clang_conda  # [win]
+    # On Windows, glib's aclocal m4 (AM_PATH_GLIB_2_0) must be in the
+    # *build* env so autoreconf can find it; put glib in build: too on
+    # win (it's already in host: for the library link).
+    - glib  # [win]
+    - pkg-config  # [win]
     # Autotools toolchain runs on the build host; must be in `build:`,
     # not `host:`, so cross-builds get the build-platform-native binaries.
     - autoconf               # [unix]

@@ -84,6 +84,17 @@ if [[ "${HOST:-$(uname -m)-unknown-$(uname -s | tr A-Z a-z)}" == *darwin* ]]; th
     grep -n 'track-macro' configure.ac || echo "  (flag removed)"
 fi
 
+# On Windows, autotools_clang_conda ships m2-autoconf 2.71; configure.ac
+# requires 2.72 via AC_PREREQ. Newer AC_PREREQ-2.72-only features are
+# not actually used in this configure.ac (verified by grep), so bumping
+# the prereq down to 2.71 is safe. Drop this sed once conda-forge ships
+# a 2.72 m2-autoconf wrapper that autotools_clang_conda picks up.
+if [ "$IS_WIN" = 1 ]; then
+    printf "### ---> (%s) Patching AC_PREREQ down to 2.71 for Windows m2-autoconf ... \n" $(date -Iseconds)
+    sed -i.bak -e 's/AC_PREREQ(\[2\.72\])/AC_PREREQ([2.71])/' configure.ac
+    grep -n 'AC_PREREQ' configure.ac
+fi
+
 printf "### ---> (%s) Running autogen.sh ... \n" $(date -Iseconds)
 # Make sure autoreconf/aclocal find autoconf-archive's m4 macros (AX_PATH_GSL,
 # AX_CFLAGS_WARN_ALL, etc.) from the build prefix. Without this, aclocal
