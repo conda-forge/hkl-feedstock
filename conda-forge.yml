@@ -13,6 +13,12 @@ conda_build:
 # and lets `build-locally.py osx_arm64_` work on a Linux host.
 build_platform:
   osx_arm64: linux_64
+# Cross-built osx packages cannot be tested on the Linux build host:
+# the test env needs __osx >=11.0 (virtual package), which Linux does
+# not provide. `test: native` tells conda-build to skip the test phase
+# whenever the target platform is not the build host's platform. Real
+# macOS testing happens later when the package is installed on a Mac.
+test: native
 # Tell conda-smithy not to overwrite our locally-extended .gitignore on
 # rerender (the extension is to ignore /build_artifacts.stale.* trees
 # that podman-on-NFS leaves behind; see ~/.config/opencode/AGENTS.md).
