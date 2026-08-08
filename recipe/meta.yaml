@@ -20,7 +20,7 @@ source:
   git_rev: {{ git_rev }}
 
 build:
-  number: 0
+  number: 1
   skip: True  # [py<39 or win or osx]
 
 requirements:
